@@ -1,12 +1,12 @@
 'use client';
 import { safeFetch } from '@/lib/result';
 import React, { useEffect, useState } from 'react';
-import { getChannelsResponseSchema } from '../api/channel/route';
-import { getUsersResponseSchema } from '../api/user/route';
-import { registerUserRequestSchema } from '../api/channel/[channelId]/route';
+import { getChannelsResponseSchema } from '../api/channel/schema';
+import { getUsersResponseSchema } from '../api/user/schema';
+import { registerUserRequestSchema } from '../api/channel/[channelId]/schema';
 import { channelSchema } from '@/models/channel';
 import { userSchema } from '@/models/user';
-import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/solid';
 
 interface Channel {
@@ -302,7 +302,7 @@ const AdminPage = () => {
               >
                 <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
                   <div className="flex justify-between items-center mb-4">
-                    <Dialog.Title as="h3" className="text-lg font-bold">Create Channel</Dialog.Title>
+                    <DialogTitle as="h3" className="text-lg font-bold">Create Channel</DialogTitle>
                     <button onClick={closeChannelDialog} className="text-gray-400 hover:text-gray-600">
                       <XMarkIcon className="h-6 w-6" />
                     </button>

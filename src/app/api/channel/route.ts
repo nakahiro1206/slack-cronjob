@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getChannels } from '@/storage/channel';
-import { z } from 'zod';
 import { channelSchema } from '@/models/channel';
 import { addChannel } from '@/lib/firebase/channel';
 
-export const getChannelsResponseSchema = z.object({
-  channels: z.array(channelSchema),
-});
+
 export async function GET(request: NextRequest) {
   try {
     // Optionally, add authentication here if needed

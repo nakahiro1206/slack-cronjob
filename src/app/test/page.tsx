@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { type Channel } from '@/models/channel';
 import { safeFetch } from '@/lib/result';
-import { getChannelsResponseSchema } from '../api/channel/route';
+import { getChannelsResponseSchema } from '../api/channel/schema';
 
 export default function TestPage() {
   const [result, setResult] = useState<string>('');

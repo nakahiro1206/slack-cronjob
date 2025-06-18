@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addUser, getUsers } from "@/storage/user";
 import { userSchema } from "@/models/user";
-import { z } from "zod";
-
-export const getUsersResponseSchema = z.object({
-  users: z.array(userSchema),
-});
 
 export async function GET(request: NextRequest) {
   const getUsersResult = await getUsers();

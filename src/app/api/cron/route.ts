@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { WebClient } from '@slack/web-api';
-import { safeFetch } from '@/lib/result';
-import { getChannelsResponseSchema } from '../channel/route';
 import { getChannels } from '@/storage/channel';
 
 // Initialize Slack client
