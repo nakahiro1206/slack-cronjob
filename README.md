@@ -1,3 +1,103 @@
+# Slack Bolt Cronjob
+
+A Next.js application with Vercel cronjob integration to automatically post messages to Slack channels.
+
+## Features
+
+- Automated Slack messaging via Vercel cronjobs
+- Secure API endpoint with authentication
+- Rich message formatting with Slack blocks
+- Error handling and logging
+
+## Setup
+
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Environment Variables
+
+Create a `.env.local` file in the root directory with the following variables:
+
+```env
+# Slack Configuration
+SLACK_BOT_TOKEN=xoxb-your-bot-token-here
+SLACK_CHANNEL_ID=C1234567890
+
+# Vercel Cron Security
+CRON_SECRET=your-secure-random-string-here
+```
+
+### 3. Slack Bot Setup
+
+1. Go to [Slack API Apps](https://api.slack.com/apps)
+2. Create a new app or use an existing one
+3. Add the following bot token scopes:
+   - `chat:write` - To post messages
+   - `chat:write.public` - To post to public channels
+4. Install the app to your workspace
+5. Copy the Bot User OAuth Token (starts with `xoxb-`)
+6. Invite the bot to the channel where you want to post messages
+7. Get the channel ID (right-click the channel → Copy link → extract the ID)
+
+### 4. Deploy to Vercel
+
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Add the environment variables in Vercel dashboard
+4. Deploy the application
+
+### 5. Configure Cron Schedule
+
+The cronjob is configured to run daily at 9 AM UTC. You can modify the schedule in `vercel.json`:
+
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}
+```
+
+Cron schedule format: `minute hour day month day-of-week`
+
+## API Endpoint
+
+The cronjob calls the `/api/cron` endpoint, which:
+
+- Verifies the request is from Vercel Cron using the `CRON_SECRET`
+- Posts a formatted message to the specified Slack channel
+- Returns success/error status
+
+## Customization
+
+You can customize the message content by modifying the `message` object in `src/app/api/cron/route.ts`. The current implementation includes:
+
+- A header with emoji
+- Current timestamp
+- Status indicator
+
+## Development
+
+```bash
+npm run dev
+```
+
+The application will be available at `http://localhost:3000`
+
+## Testing
+
+You can test the cron endpoint manually by making a GET request to `/api/cron` with the proper authorization header:
+
+```bash
+curl -H "Authorization: Bearer your-cron-secret" https://your-app.vercel.app/api/cron
+```
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
