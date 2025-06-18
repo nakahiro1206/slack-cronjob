@@ -1,7 +1,10 @@
-import { type User } from "./user";
+import { userSchema } from "./user";
+import { z } from "zod";
 
-export type Channel = {
-    channelId: string;
-    channelName: string;
-    users: User[];
-}
+export const channelSchema = z.object({
+    channelId: z.string(),
+    channelName: z.string(),
+    userIds: z.array(z.string()),
+});
+
+export type Channel = z.infer<typeof channelSchema>;

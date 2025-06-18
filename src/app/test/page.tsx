@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { type Channel } from '@/models/channel';
+import { safeFetch } from '@/lib/result';
+import { getChannelsResponseSchema } from '../api/channel/route';
 
 export default function TestPage() {
   const [result, setResult] = useState<string>('');
@@ -11,14 +13,14 @@ export default function TestPage() {
   useEffect(() => {
     // Load channels data
     const loadChannels = async () => {
-      try {
-        // In a real app, this would be an API call
-        // For now, we'll import the mock data directly
-        const { getChannelIds } = await import('@/storage/mock');
-        setChannels(getChannelIds());
-      } catch (error) {
-        console.error('Failed to load channels:', error);
-      }
+      const getChannelsResult = await safeFetch('channels', getChannelsResponseSchema, '/api/channel');
+      getChannelsResult.match(
+        (data) => setChannels(data.channels),
+        (error) => {
+          console.error('Failed to load channels:', error);
+          setChannels([]);
+        }
+      );
     };
 
     loadChannels();
@@ -59,22 +61,21 @@ export default function TestPage() {
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-gray-800">{channel.channelName}</h3>
                   <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                    {channel.users.length} member{channel.users.length !== 1 ? 's' : ''}
+                    {channel.userIds.length} member{channel.userIds.length !== 1 ? 's' : ''}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 mb-3">ID: {channel.channelId}</p>
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-2">Members:</h4>
                   <div className="space-y-1">
-                    {channel.users.map((user) => (
-                      <div key={user.userId} className="flex items-center text-sm">
+                    {channel.userIds.map((userId) => (
+                      <div key={userId} className="flex items-center text-sm">
                         <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center mr-2">
                           <span className="text-xs font-medium text-gray-600">
-                            {user.userName.charAt(0).toUpperCase()}
+                            {userId.charAt(0).toUpperCase()}
                           </span>
                         </div>
-                        <span className="text-gray-700">{user.userName}</span>
-                        <span className="text-gray-500 ml-2">({user.userId})</span>
+                        <span className="text-gray-500 ml-2">({userId})</span>
                       </div>
                     ))}
                   </div>

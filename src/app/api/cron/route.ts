@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { WebClient } from '@slack/web-api';
-import { getChannelIds } from '@/storage/mock';
+import { safeFetch } from '@/lib/result';
+import { getChannelsResponseSchema } from '../channel/route';
+import { getChannels } from '@/storage/channel';
 
 // Initialize Slack client
 const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
@@ -14,16 +16,21 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all available channels
-    const channels = getChannelIds();
+    const getChannelsResult = await getChannels();
+    const channels = getChannelsResult.match(
+      (channels) => channels,
+      (error) => []
+    );
+
     if (channels.length === 0) {
-      throw new Error('No channels available');
+      return NextResponse.json({ error: 'No channels found' }, { status: 404 });
     }
 
     // Randomly select a channel
     const selectedChannel = channels[Math.floor(Math.random() * channels.length)];
     
     // Create user mentions for the channel members
-    const userMentions = selectedChannel.users.map(user => `<@${user.userId}>`).join(' ');
+    const userMentions = selectedChannel.userIds.map(userId => `<@${userId}>`).join(' ');
 
     // Create the message
     const message = {
@@ -73,7 +80,7 @@ export async function GET(request: NextRequest) {
       selectedChannel: {
         channelId: selectedChannel.channelId,
         channelName: selectedChannel.channelName,
-        userCount: selectedChannel.users.length
+        userCount: selectedChannel.userIds.length
       },
       timestamp: result.ts
     });
