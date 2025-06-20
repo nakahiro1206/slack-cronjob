@@ -88,6 +88,7 @@ npm run dev
 ```
 
 The application will be available at `http://localhost:3000`
+On deployment, graphql api routing should be deployed the first time. because Nextjs executes pre-rendering. So Apollo client should `force-cache` the data of initial fetch.
 
 ## Testing
 
