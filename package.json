@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",
+    "@apollo/client-integration-nextjs": "^0.12.2",
     "@apollo/server": "^4.12.2",
     "@as-integrations/next": "^3.2.0",
     "@graphql-codegen/typescript-react-apollo": "^4.3.3",

@@ -31,12 +31,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Suspense fallback={<Spinner />}>
           <ApolloProvider>
-            <Suspense fallback={<Spinner />}>
-              {children}
-              <Toaster />
-            </Suspense>
+            {children}
           </ApolloProvider>
+          <Toaster />
+        </Suspense>
       </body>
     </html>
   );

@@ -8,7 +8,10 @@ import { setContext } from '@apollo/client/link/context';
 
 // Create an http link for remote GraphQL server (if you have one)
 const httpLink = createHttpLink({
-  uri: 'http://localhost:3000/api/graphql',
+  uri: 'https://slack-cronjob.vercel.app/api/graphql',
+  fetchOptions: {
+    cache: 'no-store',
+  }
 });
 
 // Add auth headers if needed
