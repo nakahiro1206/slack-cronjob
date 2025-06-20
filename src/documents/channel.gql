@@ -3,22 +3,29 @@ query GetChannels {
     channelId
     channelName
     userIds
+    day
   }
 }
 
-mutation AddChannel($channelId: ID!, $channelName: String!, $userIds: [ID!]!) {
+mutation AddChannel(
+  $channelId: ID!
+  $channelName: String!
+  $userIds: [ID!]!
+  $day: Day!
+) {
   addChannel(
     channelId: $channelId
     channelName: $channelName
     userIds: $userIds
+    day: $day
   ) {
     success
     error
   }
 }
 
-mutation RegisterUser($channelId: ID!, $userId: ID!) {
-  registerUser(channelId: $channelId, userId: $userId) {
+mutation RegisterUsers($channelId: ID!, $userIds: [ID!]!) {
+  registerUsers(channelId: $channelId, userIds: $userIds) {
     success
     error
   }

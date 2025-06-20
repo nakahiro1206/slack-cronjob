@@ -2,7 +2,7 @@ extend type Query {
   cronjobSecret: String!
 }
 extend type Mutation {
-  notify: NotifyResponse!
+  notify(channelIds: [String!]): NotifyResponse!
 }
 
 type NotifyResponse {

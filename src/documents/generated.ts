@@ -32,21 +32,33 @@ export type Channel = {
   __typename?: 'Channel';
   channelId: Scalars['ID']['output'];
   channelName: Scalars['String']['output'];
+  day: Day;
   userIds: Array<Scalars['ID']['output']>;
 };
+
+export enum Day {
+  Friday = 'FRIDAY',
+  Monday = 'MONDAY',
+  Saturday = 'SATURDAY',
+  Sunday = 'SUNDAY',
+  Thursday = 'THURSDAY',
+  Tuesday = 'TUESDAY',
+  Wednesday = 'WEDNESDAY'
+}
 
 export type Mutation = {
   __typename?: 'Mutation';
   addChannel: AddChannelResponse;
   addUser: AddUserResponse;
   notify: NotifyResponse;
-  registerUser: RegisterUserResponse;
+  registerUsers: RegisterUserResponse;
 };
 
 
 export type MutationAddChannelArgs = {
   channelId: Scalars['ID']['input'];
   channelName: Scalars['String']['input'];
+  day: Day;
   userIds: Array<Scalars['ID']['input']>;
 };
 
@@ -57,9 +69,14 @@ export type MutationAddUserArgs = {
 };
 
 
-export type MutationRegisterUserArgs = {
+export type MutationNotifyArgs = {
+  channelIds?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type MutationRegisterUsersArgs = {
   channelId: Scalars['ID']['input'];
-  userId: Scalars['ID']['input'];
+  userIds: Array<Scalars['ID']['input']>;
 };
 
 export type NotifyResponse = {
@@ -90,31 +107,34 @@ export type User = {
 export type GetChannelsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetChannelsQuery = { __typename?: 'Query', channels: Array<{ __typename?: 'Channel', channelId: string, channelName: string, userIds: Array<string> }> };
+export type GetChannelsQuery = { __typename?: 'Query', channels: Array<{ __typename?: 'Channel', channelId: string, channelName: string, userIds: Array<string>, day: Day }> };
 
 export type AddChannelMutationVariables = Exact<{
   channelId: Scalars['ID']['input'];
   channelName: Scalars['String']['input'];
   userIds: Array<Scalars['ID']['input']> | Scalars['ID']['input'];
+  day: Day;
 }>;
 
 
 export type AddChannelMutation = { __typename?: 'Mutation', addChannel: { __typename?: 'AddChannelResponse', success: boolean, error?: string | null } };
 
-export type RegisterUserMutationVariables = Exact<{
+export type RegisterUsersMutationVariables = Exact<{
   channelId: Scalars['ID']['input'];
-  userId: Scalars['ID']['input'];
+  userIds: Array<Scalars['ID']['input']> | Scalars['ID']['input'];
 }>;
 
 
-export type RegisterUserMutation = { __typename?: 'Mutation', registerUser: { __typename?: 'RegisterUserResponse', success: boolean, error?: string | null } };
+export type RegisterUsersMutation = { __typename?: 'Mutation', registerUsers: { __typename?: 'RegisterUserResponse', success: boolean, error?: string | null } };
 
 export type GetCronjobSecretQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetCronjobSecretQuery = { __typename?: 'Query', cronjobSecret: string };
 
-export type NotifyMutationVariables = Exact<{ [key: string]: never; }>;
+export type NotifyMutationVariables = Exact<{
+  channelIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+}>;
 
 
 export type NotifyMutation = { __typename?: 'Mutation', notify: { __typename?: 'NotifyResponse', success: boolean, message?: string | null } };
@@ -139,6 +159,7 @@ export const GetChannelsDocument = gql`
     channelId
     channelName
     userIds
+    day
   }
 }
     `;
@@ -175,8 +196,13 @@ export type GetChannelsLazyQueryHookResult = ReturnType<typeof useGetChannelsLaz
 export type GetChannelsSuspenseQueryHookResult = ReturnType<typeof useGetChannelsSuspenseQuery>;
 export type GetChannelsQueryResult = Apollo.QueryResult<GetChannelsQuery, GetChannelsQueryVariables>;
 export const AddChannelDocument = gql`
-    mutation AddChannel($channelId: ID!, $channelName: String!, $userIds: [ID!]!) {
-  addChannel(channelId: $channelId, channelName: $channelName, userIds: $userIds) {
+    mutation AddChannel($channelId: ID!, $channelName: String!, $userIds: [ID!]!, $day: Day!) {
+  addChannel(
+    channelId: $channelId
+    channelName: $channelName
+    userIds: $userIds
+    day: $day
+  ) {
     success
     error
   }
@@ -200,6 +226,7 @@ export type AddChannelMutationFn = Apollo.MutationFunction<AddChannelMutation, A
  *      channelId: // value for 'channelId'
  *      channelName: // value for 'channelName'
  *      userIds: // value for 'userIds'
+ *      day: // value for 'day'
  *   },
  * });
  */
@@ -210,41 +237,41 @@ export function useAddChannelMutation(baseOptions?: Apollo.MutationHookOptions<A
 export type AddChannelMutationHookResult = ReturnType<typeof useAddChannelMutation>;
 export type AddChannelMutationResult = Apollo.MutationResult<AddChannelMutation>;
 export type AddChannelMutationOptions = Apollo.BaseMutationOptions<AddChannelMutation, AddChannelMutationVariables>;
-export const RegisterUserDocument = gql`
-    mutation RegisterUser($channelId: ID!, $userId: ID!) {
-  registerUser(channelId: $channelId, userId: $userId) {
+export const RegisterUsersDocument = gql`
+    mutation RegisterUsers($channelId: ID!, $userIds: [ID!]!) {
+  registerUsers(channelId: $channelId, userIds: $userIds) {
     success
     error
   }
 }
     `;
-export type RegisterUserMutationFn = Apollo.MutationFunction<RegisterUserMutation, RegisterUserMutationVariables>;
+export type RegisterUsersMutationFn = Apollo.MutationFunction<RegisterUsersMutation, RegisterUsersMutationVariables>;
 
 /**
- * __useRegisterUserMutation__
+ * __useRegisterUsersMutation__
  *
- * To run a mutation, you first call `useRegisterUserMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useRegisterUserMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useRegisterUsersMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRegisterUsersMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [registerUserMutation, { data, loading, error }] = useRegisterUserMutation({
+ * const [registerUsersMutation, { data, loading, error }] = useRegisterUsersMutation({
  *   variables: {
  *      channelId: // value for 'channelId'
- *      userId: // value for 'userId'
+ *      userIds: // value for 'userIds'
  *   },
  * });
  */
-export function useRegisterUserMutation(baseOptions?: Apollo.MutationHookOptions<RegisterUserMutation, RegisterUserMutationVariables>) {
+export function useRegisterUsersMutation(baseOptions?: Apollo.MutationHookOptions<RegisterUsersMutation, RegisterUsersMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RegisterUserMutation, RegisterUserMutationVariables>(RegisterUserDocument, options);
+        return Apollo.useMutation<RegisterUsersMutation, RegisterUsersMutationVariables>(RegisterUsersDocument, options);
       }
-export type RegisterUserMutationHookResult = ReturnType<typeof useRegisterUserMutation>;
-export type RegisterUserMutationResult = Apollo.MutationResult<RegisterUserMutation>;
-export type RegisterUserMutationOptions = Apollo.BaseMutationOptions<RegisterUserMutation, RegisterUserMutationVariables>;
+export type RegisterUsersMutationHookResult = ReturnType<typeof useRegisterUsersMutation>;
+export type RegisterUsersMutationResult = Apollo.MutationResult<RegisterUsersMutation>;
+export type RegisterUsersMutationOptions = Apollo.BaseMutationOptions<RegisterUsersMutation, RegisterUsersMutationVariables>;
 export const GetCronjobSecretDocument = gql`
     query GetCronjobSecret {
   cronjobSecret
@@ -283,8 +310,8 @@ export type GetCronjobSecretLazyQueryHookResult = ReturnType<typeof useGetCronjo
 export type GetCronjobSecretSuspenseQueryHookResult = ReturnType<typeof useGetCronjobSecretSuspenseQuery>;
 export type GetCronjobSecretQueryResult = Apollo.QueryResult<GetCronjobSecretQuery, GetCronjobSecretQueryVariables>;
 export const NotifyDocument = gql`
-    mutation Notify {
-  notify {
+    mutation Notify($channelIds: [String!]) {
+  notify(channelIds: $channelIds) {
     success
     message
   }
@@ -305,6 +332,7 @@ export type NotifyMutationFn = Apollo.MutationFunction<NotifyMutation, NotifyMut
  * @example
  * const [notifyMutation, { data, loading, error }] = useNotifyMutation({
  *   variables: {
+ *      channelIds: // value for 'channelIds'
  *   },
  * });
  */

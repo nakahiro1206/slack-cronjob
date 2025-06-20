@@ -6,7 +6,7 @@ import    { users as Query_users } from './user/resolvers/Query/users';
 import    { addChannel as Mutation_addChannel } from './channel/resolvers/Mutation/addChannel';
 import    { addUser as Mutation_addUser } from './user/resolvers/Mutation/addUser';
 import    { notify as Mutation_notify } from './cronjob/resolvers/Mutation/notify';
-import    { registerUser as Mutation_registerUser } from './channel/resolvers/Mutation/registerUser';
+import    { registerUsers as Mutation_registerUsers } from './channel/resolvers/Mutation/registerUsers';
 import    { AddChannelResponse } from './channel/resolvers/AddChannelResponse';
 import    { AddUserResponse } from './user/resolvers/AddUserResponse';
 import    { Channel } from './channel/resolvers/Channel';
@@ -15,7 +15,7 @@ import    { RegisterUserResponse } from './channel/resolvers/RegisterUserRespons
 import    { User } from './user/resolvers/User';
     export const resolvers: Resolvers = {
       Query: { channels: Query_channels,cronjobSecret: Query_cronjobSecret,users: Query_users },
-      Mutation: { addChannel: Mutation_addChannel,addUser: Mutation_addUser,notify: Mutation_notify,registerUser: Mutation_registerUser },
+      Mutation: { addChannel: Mutation_addChannel,addUser: Mutation_addUser,notify: Mutation_notify,registerUsers: Mutation_registerUsers },
       
       AddChannelResponse: AddChannelResponse,
 AddUserResponse: AddUserResponse,

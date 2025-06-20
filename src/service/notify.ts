@@ -1,11 +1,89 @@
 import { WebClient } from '@slack/web-api';
 import { getChannels } from '@/lib/firebase/channel';
+import type { Channel } from '@/models/channel';
+
+const compareDay = (domainDay: string, japanDay: string) => {
+  const lowerCaseDomainDay = domainDay.toLowerCase();
+  const lowerCaseJapanDay = japanDay.toLowerCase();
+  return lowerCaseDomainDay === lowerCaseJapanDay;
+}
 
 type NotifyResult = {
     success: boolean;
     message: string | undefined;
 }
-export const notify = async (): Promise<NotifyResult> => {
+
+async function postMessage({
+  slack,
+  channel,
+  hour,
+  minute,
+  day,
+  month,
+  date,
+  year,
+}: {
+  slack: WebClient;
+  channel: Channel;
+  hour: number;
+  minute: number;
+  day: string;
+  month: string;
+  date: number;
+  year: number;
+}): Promise<{
+  channelName: string;
+  ok: boolean;
+  error?: string;
+}> {
+  // Create user mentions for the channel members
+  const shuffledUserIds = channel.userIds.sort(() => Math.random() - 0.5);
+  const userMentions = shuffledUserIds.map(userId => `- <@${userId}>`).join('\n');
+
+  // Create the message
+  const message = {
+    channel: channel.channelId,
+    text: `*📣1on1 order for ${channel.channelName}*`,
+    blocks: [
+      {
+        type: 'section',
+        fields: [
+        {
+          type: 'mrkdwn',
+          text: `*📣 1on1 order for ${channel.channelName}* \n This message was automatically posted by your Vercel cronjob.`
+        },
+        {
+          type: 'mrkdwn',
+          text: `*⏰ Date (UTC+9):*\n ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${day}, ${month} ${date}, ${year}`
+        },
+        ]
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*📋 Order:*\n${userMentions}`
+        }
+      },
+    ]
+  };
+
+  // Post message to Slack
+  const result = await slack.chat.postMessage(message);
+  return {
+    channelName: channel.channelName,
+    ok: result.ok,
+    error: result.error,
+  };
+}
+
+type NotifyArgs = {
+  mode: 'sameDayOnly';
+} | {
+  mode: 'specifiedChannels';
+  channelIds: string[];
+}
+export const notify = async (args: NotifyArgs): Promise<NotifyResult> => {
     // Initialize Slack client
     const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
 
@@ -21,11 +99,7 @@ export const notify = async (): Promise<NotifyResult> => {
     const month = japanTime.toLocaleDateString('en-US', { month: 'long' });
     const year = japanTime.getFullYear();
 
-    console.log(`Cron job started at ${japanTime.toISOString()} (UTC+9)`);
-    console.log(`Date: ${day}, ${month} ${date}, ${year}`);
-
   try {
-
     // Get all available channels
     const getChannelsResult = await getChannels();
     const channels = getChannelsResult.match(
@@ -40,54 +114,43 @@ export const notify = async (): Promise<NotifyResult> => {
       };
     }
 
-    // Randomly select a channel
-    const selectedChannel = channels[Math.floor(Math.random() * channels.length)];
-    
-    // Create user mentions for the channel members
-    const userMentions = selectedChannel.userIds.map(userId => `<@${userId}>`).join(' ');
-
-    // Create the message
-    const message = {
-      channel: selectedChannel.channelId,
-      text: `Hello from Vercel Cron! 🚀 - ${selectedChannel.channelName}`,
-      blocks: [
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `*Scheduled Message for ${selectedChannel.channelName}* ⏰\n\nThis message was automatically posted by your Vercel cronjob.`
-          }
-        },
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `*Channel Members:*\n${userMentions}`
-          }
-        },
-        {
-          type: 'section',
-          fields: [
-            {
-              type: 'mrkdwn',
-              text: `*Date (UTC+9):*\n ${hour}:${minute} ${day}, ${month} ${date}, ${year}`
-            },
-            {
-              type: 'mrkdwn',
-              text: '*Status:*\n✅ Success'
-            }
-          ]
-        }
-      ]
-    };
-
-    // Post message to Slack
-    const result = await slack.chat.postMessage(message);
-
-    if (!result.ok) {
+    let targetChannels: Channel[] = [];
+    if (args.mode === 'sameDayOnly') {
+      targetChannels = channels.filter((channel) => compareDay(channel.day, day));
+    } else if (args.mode === 'specifiedChannels') {
+      targetChannels = channels.filter((channel) => args.channelIds.includes(channel.channelId));
+    } else {
       return {
         success: false,
-        message: `Failed to post message: ${result.error}`,
+        message: 'Invalid mode',
+      };
+    }
+    
+    const results = await Promise.all(targetChannels.map(async (channel) => {
+      return postMessage({
+        slack,
+        channel,
+        hour,
+        minute,
+        day,
+        month,
+        date,
+        year,
+      });
+    }));
+    
+    const failedChannels = results.map((result) => {
+      if (result.ok) {
+        return undefined
+      } else {
+        return result.channelName;
+      }
+    }).filter((channelName) => channelName !== undefined);
+
+    if (failedChannels.length > 0) {
+      return {
+        success: false,
+        message: `Failed to post message: ${failedChannels.join(', ')}`,
       };
     }
 

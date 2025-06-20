@@ -2,6 +2,17 @@ type Channel {
   channelId: ID!
   channelName: String!
   userIds: [ID!]!
+  day: Day!
+}
+
+enum Day {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
 }
 
 extend type Query {
@@ -13,8 +24,9 @@ extend type Mutation {
     channelId: ID!
     channelName: String!
     userIds: [ID!]!
+    day: Day!
   ): AddChannelResponse!
-  registerUser(channelId: ID!, userId: ID!): RegisterUserResponse!
+  registerUsers(channelId: ID!, userIds: [ID!]!): RegisterUserResponse!
 }
 
 type AddChannelResponse {

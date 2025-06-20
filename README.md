@@ -24,7 +24,6 @@ Create a `.env.local` file in the root directory with the following variables:
 ```env
 # Slack Configuration
 SLACK_BOT_TOKEN=xoxb-your-bot-token-here
-SLACK_CHANNEL_ID=C1234567890
 
 # Vercel Cron Security
 CRON_SECRET=your-secure-random-string-here

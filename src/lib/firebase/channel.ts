@@ -104,7 +104,7 @@ export const getChannelByUserId = async (userId: string): Promise<Result<Channel
     }
 }
 
-export const registerUser = async (channelId: string, userId: string): Promise<Result<void, Error>> => {
+export const registerUsers = async (channelId: string, userIds: string[]): Promise<Result<void, Error>> => {
     try {
         const channelsRef = collection(db, 'channels');
         const docRef = doc(channelsRef, channelId);
@@ -113,10 +113,8 @@ export const registerUser = async (channelId: string, userId: string): Promise<R
             return Err(new Error('Channel not found'));
         }
         const channel = docSnap.data() as Channel;
-        if (channel.userIds.includes(userId)) {
-            return Err(new Error('User already registered'));
-        }
-        channel.userIds.push(userId);
+        const newUserIds = new Set([...channel.userIds, ...userIds]);
+        channel.userIds = Array.from(newUserIds);
         await updateDoc(docRef, channel);
         return Ok(undefined);
     } catch (error) {

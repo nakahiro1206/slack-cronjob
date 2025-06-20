@@ -10,14 +10,25 @@ type AddUserResponse {
 type Channel {
   channelId: ID!
   channelName: String!
+  day: Day!
   userIds: [ID!]!
 }
 
+enum Day {
+  FRIDAY
+  MONDAY
+  SATURDAY
+  SUNDAY
+  THURSDAY
+  TUESDAY
+  WEDNESDAY
+}
+
 type Mutation {
-  addChannel(channelId: ID!, channelName: String!, userIds: [ID!]!): AddChannelResponse!
+  addChannel(channelId: ID!, channelName: String!, day: Day!, userIds: [ID!]!): AddChannelResponse!
   addUser(id: ID!, name: String!): AddUserResponse!
-  notify: NotifyResponse!
-  registerUser(channelId: ID!, userId: ID!): RegisterUserResponse!
+  notify(channelIds: [String!]): NotifyResponse!
+  registerUsers(channelId: ID!, userIds: [ID!]!): RegisterUserResponse!
 }
 
 type NotifyResponse {

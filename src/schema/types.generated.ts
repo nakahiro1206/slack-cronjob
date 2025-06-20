@@ -6,6 +6,8 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: 
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+export type EnumResolverSignature<T, AllowedValues = any> = { [key in keyof T]?: AllowedValues };
 export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -31,21 +33,32 @@ export type Channel = {
   __typename?: 'Channel';
   channelId: Scalars['ID']['output'];
   channelName: Scalars['String']['output'];
+  day: Day;
   userIds: Array<Scalars['ID']['output']>;
 };
+
+export type Day =
+  | 'FRIDAY'
+  | 'MONDAY'
+  | 'SATURDAY'
+  | 'SUNDAY'
+  | 'THURSDAY'
+  | 'TUESDAY'
+  | 'WEDNESDAY';
 
 export type Mutation = {
   __typename?: 'Mutation';
   addChannel: AddChannelResponse;
   addUser: AddUserResponse;
   notify: NotifyResponse;
-  registerUser: RegisterUserResponse;
+  registerUsers: RegisterUserResponse;
 };
 
 
 export type MutationaddChannelArgs = {
   channelId: Scalars['ID']['input'];
   channelName: Scalars['String']['input'];
+  day: Day;
   userIds: Array<Scalars['ID']['input']>;
 };
 
@@ -56,9 +69,14 @@ export type MutationaddUserArgs = {
 };
 
 
-export type MutationregisterUserArgs = {
+export type MutationnotifyArgs = {
+  channelIds?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type MutationregisterUsersArgs = {
   channelId: Scalars['ID']['input'];
-  userId: Scalars['ID']['input'];
+  userIds: Array<Scalars['ID']['input']>;
 };
 
 export type NotifyResponse = {
@@ -161,8 +179,9 @@ export type ResolversTypes = {
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   AddUserResponse: ResolverTypeWrapper<AddUserResponse>;
-  Channel: ResolverTypeWrapper<Channel>;
+  Channel: ResolverTypeWrapper<Omit<Channel, 'day'> & { day: ResolversTypes['Day'] }>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
+  Day: ResolverTypeWrapper<'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY'>;
   Mutation: ResolverTypeWrapper<{}>;
   NotifyResponse: ResolverTypeWrapper<NotifyResponse>;
   Query: ResolverTypeWrapper<{}>;
@@ -199,15 +218,18 @@ export type AddUserResponseResolvers<ContextType = any, ParentType extends Resol
 export type ChannelResolvers<ContextType = any, ParentType extends ResolversParentTypes['Channel'] = ResolversParentTypes['Channel']> = {
   channelId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   channelName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  day?: Resolver<ResolversTypes['Day'], ParentType, ContextType>;
   userIds?: Resolver<Array<ResolversTypes['ID']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type DayResolvers = EnumResolverSignature<{ FRIDAY?: any, MONDAY?: any, SATURDAY?: any, SUNDAY?: any, THURSDAY?: any, TUESDAY?: any, WEDNESDAY?: any }, ResolversTypes['Day']>;
+
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
-  addChannel?: Resolver<ResolversTypes['AddChannelResponse'], ParentType, ContextType, RequireFields<MutationaddChannelArgs, 'channelId' | 'channelName' | 'userIds'>>;
+  addChannel?: Resolver<ResolversTypes['AddChannelResponse'], ParentType, ContextType, RequireFields<MutationaddChannelArgs, 'channelId' | 'channelName' | 'day' | 'userIds'>>;
   addUser?: Resolver<ResolversTypes['AddUserResponse'], ParentType, ContextType, RequireFields<MutationaddUserArgs, 'id' | 'name'>>;
-  notify?: Resolver<ResolversTypes['NotifyResponse'], ParentType, ContextType>;
-  registerUser?: Resolver<ResolversTypes['RegisterUserResponse'], ParentType, ContextType, RequireFields<MutationregisterUserArgs, 'channelId' | 'userId'>>;
+  notify?: Resolver<ResolversTypes['NotifyResponse'], ParentType, ContextType, Partial<MutationnotifyArgs>>;
+  registerUsers?: Resolver<ResolversTypes['RegisterUserResponse'], ParentType, ContextType, RequireFields<MutationregisterUsersArgs, 'channelId' | 'userIds'>>;
 };
 
 export type NotifyResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['NotifyResponse'] = ResolversParentTypes['NotifyResponse']> = {
@@ -238,6 +260,7 @@ export type Resolvers<ContextType = any> = {
   AddChannelResponse?: AddChannelResponseResolvers<ContextType>;
   AddUserResponse?: AddUserResponseResolvers<ContextType>;
   Channel?: ChannelResolvers<ContextType>;
+  Day?: DayResolvers;
   Mutation?: MutationResolvers<ContextType>;
   NotifyResponse?: NotifyResponseResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
