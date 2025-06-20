@@ -1,51 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { type Channel } from '@/models/channel';
-import { safeFetch } from '@/lib/result';
-import { getChannelsResponseSchema } from '../api/channel/schema';
+import { useGetChannelsSuspenseQuery } from '@/documents/generated';
+import { toast } from 'sonner';
+import { useNotifyMutation } from '@/documents/generated';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function TestPage() {
-  const [result, setResult] = useState<string>('');
-  const [loading, setLoading] = useState(false);
-  const [channels, setChannels] = useState<Channel[]>([]);
-
-  useEffect(() => {
-    // Load channels data
-    const loadChannels = async () => {
-      const getChannelsResult = await safeFetch('channels', getChannelsResponseSchema, '/api/channel');
-      getChannelsResult.match(
-        (data) => setChannels(data.channels),
-        (error) => {
-          console.error('Failed to load channels:', error);
-          setChannels([]);
-        }
-      );
-    };
-
-    loadChannels();
-  }, []);
+  const { data , error } = useGetChannelsSuspenseQuery();
+  const [notifyMutation, { loading: loadingNotifyMutation }] = useNotifyMutation();
 
   const testCron = async () => {
-    setLoading(true);
-    setResult('');
-
-    try {
-      const response = await fetch('/api/cron', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || 'test-secret'}`
+    await notifyMutation({
+      onCompleted: (data) => {
+        if (data.notify.success) {
+          toast.success('Cron job triggered successfully');
+        } else {
+          toast.error('Cron job triggered failed');
         }
-      });
-
-      const data = await response.json();
-      setResult(JSON.stringify(data, null, 2));
-    } catch (error) {
-      setResult(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setLoading(false);
-    }
+      },
+    });
   };
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
 
   return (
     <div className="min-h-screen p-8 bg-gray-50">
@@ -56,7 +34,7 @@ export default function TestPage() {
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
           <h2 className="text-xl font-semibold mb-4 text-gray-800">Available Channels</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {channels.map((channel) => (
+            {data?.channels.map((channel) => (
               <div key={channel.channelId} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-gray-800">{channel.channelName}</h3>
@@ -94,22 +72,12 @@ export default function TestPage() {
           
           <button
             onClick={testCron}
-            disabled={loading}
+            disabled={loadingNotifyMutation}
             className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors"
           >
-            {loading ? 'Testing...' : 'Test Cron Endpoint'}
+            {loadingNotifyMutation ? <Spinner /> : 'Test Cron Endpoint'}
           </button>
         </div>
-
-        {/* Results Section */}
-        {result && (
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">Test Result:</h3>
-            <pre className="bg-gray-50 p-4 rounded-lg border overflow-x-auto text-sm font-mono">
-              {result}
-            </pre>
-          </div>
-        )}
 
         {/* Info Section */}
         <div className="mt-8 bg-yellow-50 p-6 rounded-lg border border-yellow-200">

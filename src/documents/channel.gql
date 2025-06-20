@@ -1,0 +1,25 @@
+query GetChannels {
+  channels {
+    channelId
+    channelName
+    userIds
+  }
+}
+
+mutation AddChannel($channelId: ID!, $channelName: String!, $userIds: [ID!]!) {
+  addChannel(
+    channelId: $channelId
+    channelName: $channelName
+    userIds: $userIds
+  ) {
+    success
+    error
+  }
+}
+
+mutation RegisterUser($channelId: ID!, $userId: ID!) {
+  registerUser(channelId: $channelId, userId: $userId) {
+    success
+    error
+  }
+}

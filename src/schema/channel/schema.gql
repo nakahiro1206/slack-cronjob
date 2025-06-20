@@ -1,0 +1,28 @@
+type Channel {
+  channelId: ID!
+  channelName: String!
+  userIds: [ID!]!
+}
+
+extend type Query {
+  channels: [Channel!]!
+}
+
+extend type Mutation {
+  addChannel(
+    channelId: ID!
+    channelName: String!
+    userIds: [ID!]!
+  ): AddChannelResponse!
+  registerUser(channelId: ID!, userId: ID!): RegisterUserResponse!
+}
+
+type AddChannelResponse {
+  success: Boolean!
+  error: String
+}
+
+type RegisterUserResponse {
+  success: Boolean!
+  error: String
+}

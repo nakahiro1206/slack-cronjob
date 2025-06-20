@@ -1,0 +1,42 @@
+type AddChannelResponse {
+  error: String
+  success: Boolean!
+}
+
+type AddUserResponse {
+  success: Boolean!
+}
+
+type Channel {
+  channelId: ID!
+  channelName: String!
+  userIds: [ID!]!
+}
+
+type Mutation {
+  addChannel(channelId: ID!, channelName: String!, userIds: [ID!]!): AddChannelResponse!
+  addUser(id: ID!, name: String!): AddUserResponse!
+  notify: NotifyResponse!
+  registerUser(channelId: ID!, userId: ID!): RegisterUserResponse!
+}
+
+type NotifyResponse {
+  message: String
+  success: Boolean!
+}
+
+type Query {
+  channels: [Channel!]!
+  cronjobSecret: String!
+  users: [User!]!
+}
+
+type RegisterUserResponse {
+  error: String
+  success: Boolean!
+}
+
+type User {
+  id: ID!
+  name: String!
+}

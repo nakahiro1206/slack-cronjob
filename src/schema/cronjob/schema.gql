@@ -1,0 +1,11 @@
+extend type Query {
+  cronjobSecret: String!
+}
+extend type Mutation {
+  notify: NotifyResponse!
+}
+
+type NotifyResponse {
+  success: Boolean!
+  message: String
+}

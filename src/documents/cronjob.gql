@@ -1,0 +1,10 @@
+query GetCronjobSecret {
+  cronjobSecret
+}
+
+mutation Notify {
+  notify {
+    success
+    message
+  }
+}
