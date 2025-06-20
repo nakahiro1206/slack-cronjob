@@ -10,7 +10,7 @@ import { setContext } from '@apollo/client/link/context';
 const httpLink = createHttpLink({
   uri: 'https://slack-cronjob.vercel.app/api/graphql',
   fetchOptions: {
-    cache: 'no-store',
+    cache: 'force-cache',// Next.js dynamic server side rendering issue
   }
 });
 
@@ -30,6 +30,8 @@ const authLink = setContext((_, { headers }) => {
 // Create Apollo Client instance
 export const client = new ApolloClient({
   link: httpLink, //authLink.concat(httpLink),
+  ssrForceFetchDelay: 100,
+  ssrMode: typeof window === 'undefined',
   cache: new InMemoryCache(),
 }); 
 

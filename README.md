@@ -89,8 +89,6 @@ npm run dev
 
 The application will be available at `http://localhost:3000`
 
-on Deployment, we ensure the api routing endpoint is already alive due to SSR issue.
-
 ## Testing
 
 You can test the cron endpoint manually by making a GET request to `/api/cron` with the proper authorization header:
