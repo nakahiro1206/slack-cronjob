@@ -1,11 +1,7 @@
 'use client';
 
-// import { Main } from "@/components/main/Main";
-
-// export default function Home() {
-//   return <Main />;
-// }
+import { Main } from "@/components/main/Main";
 
 export default function Home() {
-  return <div>Hello World</div>;
+  return <Main />;
 }
