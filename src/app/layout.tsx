@@ -5,6 +5,7 @@ import { ApolloProvider } from "@/provider/ApolloProvider";
 import { Suspense } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import { Toaster } from "@/components/ui/sonner"
+import { TRPCProvider } from "@/provider/TRPCProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +34,9 @@ export default function RootLayout({
       >
         <Suspense fallback={<Spinner />}>
           <ApolloProvider>
-            {children}
+            <TRPCProvider>
+              {children}
+            </TRPCProvider>
           </ApolloProvider>
           <Toaster />
         </Suspense>
