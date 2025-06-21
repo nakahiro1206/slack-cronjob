@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { router, publicProcedure } from '../server';
-import { notify as notifyService } from '@/service/notify';
+import { notify as notifyService } from '@/lib/slack/notify';
 
 export const cronjobRouter = router({
   // Get cronjob secret

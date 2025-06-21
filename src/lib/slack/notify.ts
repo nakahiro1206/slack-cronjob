@@ -71,7 +71,6 @@ async function postMessage({
     ]
   };
 
-  // Post message to Slack
   const result = await slack.chat.postMessage(message);
   return {
     channelName: channel.channelName,

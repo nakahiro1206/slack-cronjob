@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { notify } from '@/service/notify';
+import { notify } from '@/lib/slack/notify';
 
 export async function GET(request: NextRequest) {
   // Verify the request is from Vercel Cron
