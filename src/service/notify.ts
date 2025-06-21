@@ -1,6 +1,7 @@
 import { WebClient } from '@slack/web-api';
 import { getChannels } from '@/lib/firebase/channel';
 import type { Channel } from '@/models/channel';
+import {Random} from 'random';
 
 const compareDay = (domainDay: string, japanDay: string) => {
   const lowerCaseDomainDay = domainDay.toLowerCase();
@@ -22,6 +23,7 @@ async function postMessage({
   month,
   date,
   year,
+  rng,
 }: {
   slack: WebClient;
   channel: Channel;
@@ -31,13 +33,14 @@ async function postMessage({
   month: string;
   date: number;
   year: number;
+  rng: Random;
 }): Promise<{
   channelName: string;
   ok: boolean;
   error?: string;
 }> {
   // Create user mentions for the channel members
-  const shuffledUserIds = channel.userIds.sort(() => Math.random() - 0.5);
+  const shuffledUserIds = channel.userIds.sort(() => rng.float(0, 1) - 0.5);
   const userMentions = shuffledUserIds.map(userId => `- <@${userId}>`).join('\n');
 
   // Create the message
@@ -99,6 +102,8 @@ export const notify = async (args: NotifyArgs): Promise<NotifyResult> => {
     const month = japanTime.toLocaleDateString('en-US', { month: 'long' });
     const year = japanTime.getFullYear();
 
+    const rng = new Random(now.toISOString());
+
   try {
     // Get all available channels
     const getChannelsResult = await getChannels();
@@ -136,6 +141,7 @@ export const notify = async (args: NotifyArgs): Promise<NotifyResult> => {
         month,
         date,
         year,
+        rng,
       });
     }));
     

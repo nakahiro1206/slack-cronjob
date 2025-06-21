@@ -3,7 +3,7 @@ import { PlusIcon } from '@heroicons/react/24/solid';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Button } from '../ui/button';
 import type { User } from '@/models/user';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Card } from '../ui/card';
 
 type Props = {
     users: User[] | undefined;

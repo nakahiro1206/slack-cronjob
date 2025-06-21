@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { userSchema } from '@/models/user';
-import { useAddUserMutation } from '@/documents/generated';
 import { toast } from 'sonner';
 import { Spinner } from '../ui/spinner';
+import { trpc } from '@/lib/trpc/client';
 
 interface UserDialogProps {
   isOpen: boolean;
@@ -20,7 +20,7 @@ export const UserDialog: React.FC<UserDialogProps> = ({
   const [newUserId, setNewUserId] = useState('');
   const [newUserName, setNewUserName] = useState('');
   const [userDialogError, setUserDialogError] = useState<string | null>(null);
-  const [addUserMutation, { loading: addUserLoading }] = useAddUserMutation();
+  const {mutate: addUserMutation, isPending: addUserLoading} = trpc.user.add.useMutation();
 
   const handleCreateUser = async () => {
     setUserDialogError(null);
@@ -32,12 +32,11 @@ export const UserDialog: React.FC<UserDialogProps> = ({
     }
 
     addUserMutation({
-      variables: {
-        id: newUserId,
-        name: newUserName,
-      },
-      onCompleted: (result) => {
-        if (result.addUser.success) {
+      id: newUserId,
+      name: newUserName,
+    }, {
+      onSuccess: (result) => {
+        if (result.success) {
           toast.success('User created successfully');
         } else {
           toast.error('Failed to create user');

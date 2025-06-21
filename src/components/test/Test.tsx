@@ -1,16 +1,19 @@
-import { useGetChannelsSuspenseQuery } from "@/documents/generated";
 import { toast } from "sonner";
-import { useNotifyMutation } from "@/documents/generated";
 import { Spinner } from "../ui/spinner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Checkbox } from "../ui/checkbox";
 import { Button } from "../ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+import { Card } from "../ui/card";
+import { trpc } from "@/lib/trpc/client";
 
 export const Test = () => {
-  const { data, error } = useGetChannelsSuspenseQuery();
-  const [notifyMutation, { loading: loadingNotifyMutation }] = useNotifyMutation();
+  const [channels, {error: channelsError}] = trpc.channel.getAll.useSuspenseQuery();
+  const {mutate: notifyMutation, isPending: loadingNotifyMutation} = trpc.cronjob.notify.useMutation();
   const [selectedChannels, setSelectedChannels] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (channelsError) toast.error(channelsError.message);
+  }, [channelsError]);
 
   const handleChannelToggle = (channelId: string) => {
     const newSelected = new Set(selectedChannels);
@@ -23,10 +26,10 @@ export const Test = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedChannels.size === data?.channels.length) {
+    if (selectedChannels.size === channels.length) {
       setSelectedChannels(new Set());
     } else {
-      setSelectedChannels(new Set(data?.channels.map(channel => channel.channelId) || []));
+      setSelectedChannels(new Set(channels.map(channel => channel.channelId) || []));
     }
   };
 
@@ -36,12 +39,11 @@ export const Test = () => {
       return;
     }
 
-    await notifyMutation({
-        variables: {
-            channelIds: Array.from(selectedChannels),
-        },
-      onCompleted: (data) => {
-        if (data.notify.success) {
+    notifyMutation({
+        channelIds: Array.from(selectedChannels),
+    }, {
+      onSuccess: (result) => {
+        if (result.success) {
           toast.success('Notified successfully');
         } else {
           toast.error('Notified failed');
@@ -49,10 +51,6 @@ export const Test = () => {
       },
     });
   };
-
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
 
   return (
     <>
@@ -63,7 +61,7 @@ export const Test = () => {
           <div className="flex items-center space-x-2">
             <Checkbox
               id="select-all"
-              checked={selectedChannels.size === data?.channels.length && data?.channels.length > 0}
+              checked={selectedChannels.size === channels.length && channels.length > 0}
               onCheckedChange={handleSelectAll}
             />
             <label htmlFor="select-all" className="text-sm font-medium text-gray-700">
@@ -72,7 +70,7 @@ export const Test = () => {
           </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {data?.channels.map((channel) => (
+          {channels.map((channel) => (
             <Card key={channel.channelId} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">

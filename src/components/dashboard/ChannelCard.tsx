@@ -1,13 +1,11 @@
 import { Card } from '../ui/card';
 import React, { FC, useState } from 'react';
-import { PlusIcon, XMarkIcon } from '@heroicons/react/24/solid';
+import { PlusIcon } from '@heroicons/react/24/solid';
 import type { Channel } from '@/models/channel';
 import type { User } from '@/models/user';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Button } from '../ui/button';
 import { TrashIcon, UserCircleIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
-import { useRegisterUsersMutation } from '@/documents/generated';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { toast } from 'sonner';
@@ -17,12 +15,13 @@ import { z } from 'zod';
 import { Badge } from '../ui/badge';
 import { X } from 'lucide-react';
 import { Spinner } from '../ui/spinner';
+import { trpc } from '@/lib/trpc/client';
 
 const UserSelectDialogButton = ({ channelId, unregisteredUsers, refetchChannels }: { channelId: string, unregisteredUsers: User[], refetchChannels: () => void }) => {
     const [isOpen, setIsOpen] = useState(false);
     const handleClose = () => setIsOpen(false);
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-    const [registerUsersMutation, { loading: loadingRegisterUsersMutation }] = useRegisterUsersMutation();
+    const {mutate: registerUsersMutation, isPending: loadingRegisterUsersMutation } = trpc.channel.registerUsers.useMutation();
 
     const handleUserSelect = (userId: string) => {
         if (!selectedUserIds.includes(userId)) {
@@ -58,9 +57,11 @@ const UserSelectDialogButton = ({ channelId, unregisteredUsers, refetchChannels 
 
     const onSubmit = (data: { userIds: string[] }) => {
         registerUsersMutation({ 
-            variables: { channelId, userIds: data.userIds },
-            onCompleted: (result) => {
-                if (result.registerUsers.success) {
+            channelId, 
+            userIds: data.userIds 
+        }, {
+            onSuccess: (result) => {
+                if (result.success) {
                     toast.success('User registered successfully');
                     refetchChannels();
                 } else {

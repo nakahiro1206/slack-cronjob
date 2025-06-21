@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ApolloProvider } from "@/provider/ApolloProvider";
 import { Suspense } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import { Toaster } from "@/components/ui/sonner"
-import { TRPCProvider } from "@/provider/TRPCProvider";
+// import { TRPCProvider } from "@/provider/TRPCProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,11 +32,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Suspense fallback={<Spinner />}>
-          <ApolloProvider>
-            <TRPCProvider>
-              {children}
-            </TRPCProvider>
-          </ApolloProvider>
+          {/* <TRPCProvider> */}
+            {children}
+          {/* </TRPCProvider> */}
           <Toaster />
         </Suspense>
       </body>

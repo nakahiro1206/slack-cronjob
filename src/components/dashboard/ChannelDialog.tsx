@@ -6,12 +6,11 @@ import { Dialog, DialogContent, DialogTitle, DialogFooter } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Channel, channelSchema } from '@/models/channel';
-import { useAddChannelMutation } from '@/documents/generated';
 import { toast } from 'sonner';
 import { X } from 'lucide-react';
 import { User } from '@/models/user';
 import { Spinner } from '../ui/spinner';
-import { Day } from '@/documents/generated';
+import { trpc } from '@/lib/trpc/client';
 
 interface ChannelDialogProps {
   isOpen: boolean;
@@ -27,7 +26,7 @@ export const ChannelDialog: React.FC<ChannelDialogProps> = ({
   refetchChannels,
 }) => {
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-  const [addChannelMutation, { loading: addChannelLoading }] = useAddChannelMutation();
+  const {mutate: addChannelMutation, isPending: addChannelLoading} = trpc.channel.add.useMutation();
 
   const {
     register,
@@ -48,18 +47,17 @@ export const ChannelDialog: React.FC<ChannelDialogProps> = ({
 
   const onSubmit = async (data: Channel) => {
     addChannelMutation({
-        variables: {
-          channelId: data.channelId,
-          channelName: data.channelName,
-          userIds: selectedUserIds,
-          day: data.day as Day,
-        },
-        onCompleted: (result) => {
-          if (result.addChannel.success) {
+        channelId: data.channelId,
+        channelName: data.channelName,
+        userIds: selectedUserIds,
+        day: data.day,
+    }, {
+        onSuccess: (result) => {
+          if (result.success) {
             toast.success('Channel created successfully');
             refetchChannels();
           } else {
-            toast.error(result.addChannel.error);
+            toast.error(result.error || 'Failed to create channel');
           }
           handleClose();
         },

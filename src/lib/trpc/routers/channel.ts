@@ -1,8 +1,11 @@
 import { z } from 'zod';
 import { router, publicProcedure } from '../server';
-import { getChannels, addChannel as addChannelFirebase } from '@/lib/firebase/channel';
-
-const DayEnum = z.enum(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']);
+import {
+    getChannels,
+    addChannel as addChannelFirebase,
+    registerUsers as registerUsersFirebase,
+} from '@/lib/firebase/channel';
+import { dayEnum } from '@/models/channel';
 
 export const channelRouter = router({
   // Get all channels
@@ -21,9 +24,9 @@ export const channelRouter = router({
   // Add a new channel
   add: publicProcedure
     .input(z.object({
-      channelId: z.string(),
-      channelName: z.string(),
-      day: DayEnum,
+      channelId: z.string().min(1),
+      channelName: z.string().min(1),
+      day: dayEnum,
       userIds: z.array(z.string()),
     }))
     .mutation(async ({ input }) => {
@@ -50,14 +53,27 @@ export const channelRouter = router({
   // Register users to a channel
   registerUsers: publicProcedure
     .input(z.object({
-      channelId: z.string(),
+      channelId: z.string().min(1),
       userIds: z.array(z.string()),
     }))
     .mutation(async ({ input }) => {
-      // This would need to be implemented in the Firebase layer
-      // For now, returning a placeholder response
-      return {
-        success: true,
-      };
+      const registerUsersResult = await registerUsersFirebase(input.channelId, input.userIds);
+      return registerUsersResult.match<{
+        success: boolean;
+        error?: string;
+      }>(
+        (channel) => {
+          return {
+            success: true,
+          };
+        },
+        (error) => {
+          console.error('Failed to register users:', error);
+          return {
+            success: false,
+            error: error.message,
+          };
+        }
+      );
     }),
 }); 

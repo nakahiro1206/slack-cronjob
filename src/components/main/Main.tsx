@@ -1,18 +1,18 @@
-import { Dashboard } from '@/components/dashboard/Dashboard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Suspense, useEffect, useState } from 'react';
 import { Test } from "@/components/test/Test";
 import { UserCard } from '../dashboard/UserCard';
-import { useGetChannelsSuspenseQuery, useGetUsersSuspenseQuery } from '@/documents/generated';
 import { toast } from 'sonner';
 import { Spinner } from '../ui/spinner';
 import { UserDialog } from '../dashboard/UserDialog';
 import { ChannelDialog } from '../dashboard/ChannelDialog';
 import { ChannelCard } from '../dashboard/ChannelCard';
+import { trpc } from '@/lib/trpc/client';
+import { Card } from '../ui/card';
 
 export const MainInternal = () => {
-  const { data: channelsData, error: channelsError, refetch: refetchChannels } = useGetChannelsSuspenseQuery();
-  const { data: usersData, error: usersError, refetch: refetchUsers } = useGetUsersSuspenseQuery();
+  const [channels, {error: channelsError, refetch: refetchChannels}] = trpc.channel.getAll.useSuspenseQuery();
+  const [users, {error: usersError, refetch: refetchUsers}] = trpc.user.getAll.useSuspenseQuery();
 
   // Dialog state
   const [isChannelDialogOpen, setChannelDialogOpen] = useState(false);
@@ -29,53 +29,50 @@ export const MainInternal = () => {
   const closeUserDialog = () => setUserDialogOpen(false);
 
   useEffect(() => {
-    const errorNotification = (error: Error) => {
-      toast.error(error.message);
-    };
-    if (channelsError) errorNotification(channelsError);
-    if (usersError) errorNotification(usersError);
+    if (channelsError) toast.error(channelsError.message);
+    if (usersError) toast.error(usersError.message);
   }, [channelsError, usersError]);
 
   return (
-    <>
+  <>
     <TabsContent value="channels">
-    <div className="bg-white rounded-lg shadow-sm">
-      <ChannelCard 
-            refetchChannels={refetchChannels}
-            channels={channelsData?.channels} 
-            users={usersData?.users.map((user) => ({
-                userId: user.id,
-                userName: user.name,
-            }))} 
-            openChannelDialog={openChannelDialog} 
-            />
-        {/* Channel Dialog */}
-        <ChannelDialog
-            isOpen={isChannelDialogOpen}
-            users={usersData?.users.map((user) => ({
-                userId: user.id,
-                userName: user.name,
-            })) || []}
-            onClose={closeChannelDialog}
-            refetchChannels={refetchChannels}
-        />
-    </div>
-  </TabsContent>
+      <>
+        <ChannelCard 
+              refetchChannels={refetchChannels}
+              channels={channels} 
+              users={users.map((user) => ({
+                  userId: user.id,
+                  userName: user.name,
+              }))} 
+              openChannelDialog={openChannelDialog} 
+              />
+          {/* Channel Dialog */}
+          <ChannelDialog
+              isOpen={isChannelDialogOpen}
+              users={users.map((user) => ({
+                  userId: user.id,
+                  userName: user.name,
+              })) || []}
+              onClose={closeChannelDialog}
+              refetchChannels={refetchChannels}
+          />
+      </>
+    </TabsContent>
 
-  <TabsContent value="users" className="flex justify-center gap-4">
-    <div className="w-1/2 bg-white rounded-lg shadow-sm">
-        <UserCard users={usersData?.users.map((user) => ({
-          userId: user.id,
-          userName: user.name,
-            })) || []} openUserDialog={openUserDialog} />
-        {/* User Dialog */}
-        <UserDialog
-            isOpen={isUserDialogOpen}
-            onClose={closeUserDialog}
-            refetchUsers={refetchUsers}
-        />
-    </div>
-  </TabsContent>
+    <TabsContent value="users">
+      <>
+          <UserCard users={users.map((user) => ({
+            userId: user.id,
+            userName: user.name,
+              })) || []} openUserDialog={openUserDialog} />
+          {/* User Dialog */}
+          <UserDialog
+              isOpen={isUserDialogOpen}
+              onClose={closeUserDialog}
+              refetchUsers={refetchUsers}
+          />
+      </>
+    </TabsContent>
   </>
   )
 }
@@ -111,11 +108,11 @@ export const Main = () => {
           </Suspense>
 
           <TabsContent value="test">
-            <div className="bg-white rounded-lg shadow-sm p-8">
+            <Card className="p-4">
               <Suspense fallback={<div className="text-center">Loading test data...</div>}>
                 <Test />
               </Suspense>
-            </div>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
