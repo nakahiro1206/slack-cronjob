@@ -5,7 +5,8 @@ import {
 } from "@/lib/ai-sdk/handle-messages";
 import { waitUntil } from "@vercel/functions";
 // import { handleNewAppMention } from "@/lib/ai-sdk/handle-app-mension";
-import { handleNewAppMentionPost } from "@/lib/ai-sdk/handle-app-mension-post";
+// import { handleNewAppMentionPost } from "@/lib/ai-sdk/handle-app-mension-post";
+import { handleAppMentionInThread } from "@/lib/ai-sdk/handle-app-mension-in-thread";
 import { verifyRequest, getBotId } from "@/lib/ai-sdk/slack-utils";
 
 export async function POST(request: Request) {
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
     const event = payload.event as SlackEvent;
 
     if (event.type === "app_mention") {
-      waitUntil(handleNewAppMentionPost(event, botUserId));
+      waitUntil(handleAppMentionInThread(event, botUserId));
     //   waitUntil(handleNewAppMentionPost(event, botUserId));
     }
 
