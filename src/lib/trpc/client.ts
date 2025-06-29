@@ -4,6 +4,8 @@ import { createTRPCNext } from "@trpc/next";
 import { httpBatchLink } from "@trpc/client";
 import superjson from "superjson";
 
+const isDev = process.env.NODE_ENV === "development";
+
 export const trpcReact = createTRPCReact<AppRouter>();
 
 export const trpc = createTRPCNext<AppRouter>({
@@ -11,7 +13,7 @@ export const trpc = createTRPCNext<AppRouter>({
         return {
             links: [
                 httpBatchLink({
-                    url: 'https://slack-cronjob.vercel.app/api/trpc',
+                    url: isDev ? 'http://localhost:3000/api/trpc' : 'https://slack-cronjob.vercel.app/api/trpc',
                     transformer: superjson,
                 }),
             ],
