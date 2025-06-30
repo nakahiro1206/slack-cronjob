@@ -62,6 +62,6 @@ export async function handleAppMentionInThread(
     console.error("Error handling app mention in thread:", error);
     
     // Update with error message
-    await updateMessage("Sorry, I encountered an error while processing your request.");
+    await updateMessage("Sorry, I encountered an error while processing your request. error details: " + error);
   }
 } 
