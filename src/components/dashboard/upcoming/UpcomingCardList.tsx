@@ -6,7 +6,6 @@ import { Button } from '../../ui/button';
 import { toast } from 'sonner';
 import { Spinner } from '../../ui/spinner';
 import { trpc } from '@/lib/trpc/client';
-import { dayToNumber, getJapanTimeFromISOString } from '@/lib/date';
 import { UpcomingCard } from './UpcomingCard';
 
 
@@ -40,7 +39,8 @@ export const UpcomingCardList: FC<Props> = ({ upcomingSlots: channels, users, re
             {channels?.sort((a, b) => {
                 return a.date.localeCompare(b.date);
             }).map((channel) => (
-                <UpcomingCard 
+                <UpcomingCard
+                    key={channel.channelId}
                     channel={channel}
                     refetchChannels={refetchChannels}
                     users={users}

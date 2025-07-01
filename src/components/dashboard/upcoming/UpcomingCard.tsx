@@ -8,7 +8,7 @@ import { UserCircleIcon, QuestionMarkCircleIcon, PencilIcon } from '@heroicons/r
 import { toast } from 'sonner';
 import { Spinner } from '../../ui/spinner';
 import { trpc } from '@/lib/trpc/client';
-import { getJapanTimeFromISOString, getJapanTime } from '@/lib/date';
+import { getJapanTimeAsJSDate, getJapanTimeAsObject } from '@/lib/date';
 import { Checkbox } from '../../ui/checkbox';
 import { UserSelectDialogButton } from './DialogButton';
 import { DatePicker } from '../../ui/date-picker';
@@ -28,7 +28,8 @@ export const UpcomingCard = ({
     const [isHandlingRemoveUsers, setIsHandlingRemoveUsers] = useState(false);
     const [selectedRemoveUserIds, setSelectedRemoveUserIds] = useState<string[]>([]);
     const [isDateDialogOpen, setIsDateDialogOpen] = useState(false);
-    const [selectedDate, setSelectedDate] = useState<Date | undefined>(getJapanTime(channel.date));
+    // 
+    const [selectedDate, setSelectedDate] = useState<Date | undefined>(getJapanTimeAsJSDate(channel.date));
     const {mutate: removeUsersMutation, isPending: loadingRemoveUsersMutation } = trpc.upcoming.removeUsers.useMutation();
     const {mutate: changeDateMutation, isPending: loadingChangeDateMutation } = trpc.upcoming.changeDate.useMutation();
 
@@ -98,16 +99,16 @@ export const UpcomingCard = ({
     }
 
     const openDateDialog = () => {
-        setSelectedDate(getJapanTime(channel.date));
+        setSelectedDate(getJapanTimeAsJSDate(channel.date));
         setIsDateDialogOpen(true);
     }
 
     const closeDateDialog = () => {
         setIsDateDialogOpen(false);
-        setSelectedDate(getJapanTime(channel.date));
+        setSelectedDate(getJapanTimeAsJSDate(channel.date));
     }
 
-    const {day, date, month, year} = getJapanTimeFromISOString(channel.date);
+    const {day, date, month, year} = getJapanTimeAsObject(channel.date);
     return (<>
         <Card key={channel.channelId} className="p-4">
         <div className="w-full flex justify-between">
@@ -198,7 +199,7 @@ export const UpcomingCard = ({
                     <div>
                         <label className="block text-sm font-medium mb-2">Current Date</label>
                         <div className="text-sm text-gray-600 p-2 bg-gray-50 rounded">
-                            {getJapanTimeFromISOString(channel.date).day} {getJapanTimeFromISOString(channel.date).date} {getJapanTimeFromISOString(channel.date).month} {getJapanTimeFromISOString(channel.date).year}
+                            {day} {date} {month} {year}
                         </div>
                     </div>
                     <div>

@@ -11,7 +11,7 @@ type TestProps = {
 }
 
 export const Test = ({refetchUpcomingSlots}: TestProps) => {
-  const [channels, {error: channelsError}] = trpc.channel.getAll.useSuspenseQuery();
+  const [channels, {error: channelsError}] = trpc.upcoming.getAll.useSuspenseQuery();
   const {mutate: notifyMutation, isPending: loadingNotifyMutation} = trpc.cronjob.notify.useMutation();
   const [selectedChannels, setSelectedChannels] = useState<Set<string>>(new Set());
 

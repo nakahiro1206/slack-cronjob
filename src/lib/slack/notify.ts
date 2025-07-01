@@ -1,14 +1,8 @@
 import { WebClient } from '@slack/web-api';
 import type { Channel } from '@/models/channel';
 import {Random} from 'random';
-import { getJapanTime, isSameDay } from '@/lib/date';
+import { getJapanTimeAsObject, isSameDateWithTodayJapanTime } from '@/lib/date';
 import { getUpcomingSlots, initializeNextWeekSlots } from '@/lib/firebase/upcoming';
-
-const compareDay = (domainDay: string, japanDay: string) => {
-  const lowerCaseDomainDay = domainDay.toLowerCase();
-  const lowerCaseJapanDay = japanDay.toLowerCase();
-  return lowerCaseDomainDay === lowerCaseJapanDay;
-}
 
 type NotifyResult = {
     success: boolean;
@@ -90,18 +84,10 @@ export const notify = async (args: NotifyArgs): Promise<NotifyResult> => {
     // Initialize Slack client
     const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
 
-    // Get current time in UTC+9 (Japan timezone)
-    const japanTime = getJapanTime();
-
     // Extract date and day information
-    const hour = japanTime.getHours();
-    const minute = japanTime.getMinutes();
-    const date = japanTime.getDate();
-    const day = japanTime.toLocaleDateString('en-US', { weekday: 'long' });
-    const month = japanTime.toLocaleDateString('en-US', { month: 'long' });
-    const year = japanTime.getFullYear();
+    const { hour, minute, date, day, month, year } = getJapanTimeAsObject();
 
-    const rng = new Random(japanTime.toISOString());
+    const rng = new Random(`${new Date().toISOString()}`);
 
   try {
     // Get all available channels
@@ -122,15 +108,13 @@ export const notify = async (args: NotifyArgs): Promise<NotifyResult> => {
     if (args.mode === 'sameDayOnly') {
       targetChannels = channels
       .filter((channel) => {
-        const startTime = getJapanTime(channel.date);
-        return isSameDay(startTime, japanTime);
+        return isSameDateWithTodayJapanTime(channel.date);
       });
     } else if (args.mode === 'specifiedChannels') {
       targetChannels = channels
       .filter((channel) => args.channelIds.includes(channel.channelId))
       .filter((channel) => {
-        const startTime = getJapanTime(channel.date);
-        return isSameDay(startTime, japanTime);
+        return isSameDateWithTodayJapanTime(channel.date);
       });
     } else {
       return {
@@ -153,7 +137,7 @@ export const notify = async (args: NotifyArgs): Promise<NotifyResult> => {
       });
     }));
 
-    initializeNextWeekSlots(targetChannels);
+    initializeNextWeekSlots(targetChannels.map((c) => c.channelId));
     
     const failedChannels = results.map((result) => {
       if (result.ok) {

@@ -1,7 +1,7 @@
 import { db } from "./client";
 import { Err, Ok, Result } from "../result";
 import { Channel, channelSchema, UpcomingSlot, upcomingSlotSchema } from "@/models/channel";
-import { findNextMeetingDate, getJapanTime } from "@/lib/date";
+import { findNextMeetingDate, getJapanTime, getJapanTimeTomorrow } from "@/lib/date";
 import { getChannels } from "./channel";
 import { collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc } from "firebase/firestore";
 
@@ -32,7 +32,7 @@ export const initializeUpcomingSlots = async (): Promise<Result<void, Error>> =>
                 const upcomingSlotRef = doc(collection(db, 'upcoming'), channel.channelId);
                 setDoc(upcomingSlotRef, {
                     ...channel,
-                    date: nextMeetingDate.toISOString(),
+                    date: nextMeetingDate || "",
                 });
             });
             return Ok(undefined);
@@ -44,23 +44,31 @@ export const initializeUpcomingSlots = async (): Promise<Result<void, Error>> =>
     return result;
 }
 
-export const initializeNextWeekSlots = async (channels: Channel[]): Promise<void> => {
-    const results = channels.map((channel) => {
-        const japanTomorrow = getJapanTime();
-        japanTomorrow.setDate(japanTomorrow.getDate() + 1);
-        const nextMeetingDate = findNextMeetingDate(japanTomorrow, channel.day);
-        try {
-            const upcomingSlotRef = doc(collection(db, 'upcoming'), channel.channelId);
-            setDoc(upcomingSlotRef, {
-                ...channel,
-                date: nextMeetingDate.toISOString(),
-            });
-            return Ok(undefined)
-        } catch (error) {
-            return Err(new Error(`${error}`))
+export const initializeNextWeekSlots = async (channelIds: string[]): Promise<void> => {
+    const japanTomorrow = getJapanTimeTomorrow();
+    const channelResult = await getChannels();
+    return channelResult.match<void>(
+        (channels) => {
+            channels.forEach((channel) => {
+                if ( channelIds.includes(channel.channelId) === true) {
+                    const nextMeetingDate = findNextMeetingDate(japanTomorrow, channel.day);
+                    try {
+                        const upcomingSlotRef = doc(collection(db, 'upcoming'), channel.channelId);
+                        setDoc(upcomingSlotRef, {
+                            ...channel,
+                            date: nextMeetingDate || "",
+                        });
+                        return Ok(undefined)
+                    } catch (error) {
+                        return Err(new Error(`${error}`))
+                    }
+                }
+            })
+        },
+        (error) => {
+            return undefined
         }
-    });
-    return undefined;
+    )
 }
 
 export const getChannelById = async (channelId: string): Promise<Result<Channel, Error>> => {

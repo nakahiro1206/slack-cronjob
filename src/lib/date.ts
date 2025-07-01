@@ -1,16 +1,25 @@
 import { DayEnum } from "@/models/channel";
+import { DateTime } from 'luxon'
 
-export const getJapanTime = (isoString?: string): Date => {
-    const d = isoString ? new Date(isoString) : new Date();
-    // make sure the date is initialized with the correct timezone
-    const japanTime = new Date(d.toLocaleString("en-US", {timeZone: "Asia/Tokyo"}));
-    return japanTime;
+export const getJapanTime = (isoString?: string): DateTime => {
+    const d = isoString ? DateTime.fromISO(isoString) : DateTime.now();
+    return d.setZone('Asia/Tokyo');
+}
+
+export const getJapanTimeTomorrow = (): DateTime => {
+    const d = DateTime.now().setZone('Asia/Tokyo');
+    return d.plus({ days: 1 });
+}
+
+export const getJapanTimeAsJSDate = (isoString?: string): Date => {
+    const d = isoString ? DateTime.fromISO(isoString) : DateTime.now();
+    return d.setZone('Asia/Tokyo').toJSDate();
 }
 
 export const dayToNumber = (day: DayEnum) => {
     switch (day) {
         case 'SUNDAY':
-            return 0;
+            return 7; // Luxon uses 1-7 for days, where 7 is Sunday
         case 'MONDAY':
             return 1;
         case 'TUESDAY':
@@ -26,63 +35,61 @@ export const dayToNumber = (day: DayEnum) => {
     }
 }
 
-const dayNumberToEnum = (day: number): DayEnum | undefined => {
-    switch (day) {
-        case 0:
-            return 'SUNDAY';
-        case 1:
-            return 'MONDAY';
-        case 2:
-            return 'TUESDAY';
-        case 3:
-            return 'WEDNESDAY';
-        case 4:
-            return 'THURSDAY';
-        case 5:
-            return 'FRIDAY';
-        case 6:
-            return 'SATURDAY';
-        default:
-            return undefined;
-    }
+export const isSameDate = (date1: DateTime, date2: DateTime) => {
+    return date1.hasSame(date2, 'day') && date1.hasSame(date2, 'month') && date1.hasSame(date2, 'year');
 }
 
-export const isSameDay = (date1: Date, date2: Date) => {
-    return (
-        date1.getDate() === date2.getDate() && 
-        date1.getMonth() === date2.getMonth() && 
-        date1.getFullYear() === date2.getFullYear());
+export const findNextMeetingDate = (japanTime: DateTime, day: DayEnum): string | null => {
+    const targetDayNumber = dayToNumber(day);
+    const currentDayNumber = japanTime.weekday; // Luxon weekday is 1-7
+    
+    // Calculate days until next meeting
+    // should be 0 ~ 6
+    const daysUntilNextMeeting = (targetDayNumber - currentDayNumber + 7) % 7;
+    
+    return japanTime.plus({ days: daysUntilNextMeeting }).toISO();
 }
 
-export const findNextMeetingDate = (japanTime: Date, day: DayEnum) => {
-    // Get current time in UTC+9 (Japan timezone)
-    const dayOfWeek = japanTime.getDay();
-    const daysUntilNextMeeting = (dayToNumber(day) - dayOfWeek + 7) % 7;
-    const nextMeetingDate = new Date(japanTime);
-    nextMeetingDate.setDate(japanTime.getDate() + daysUntilNextMeeting);
-    return nextMeetingDate;
-}
-
-export const getJapanTimeFromISOString = (isoString: string): {
+export const dateTimeToObject = (date: DateTime): {
     year: number;
     month: string;
     date: number;
     day: string;
+    hour: number;
+    minute: number;
 } => {
-    const japanTime = getJapanTime(isoString);
+    return {
+        year: date.year,
+        month: date.toFormat('MMMM'),
+        date: date.day,
+        day: date.toFormat('EEEE'),
+        hour: date.hour,
+        minute: date.minute,
+    }
+}
 
-    // Extract date and day information
-    const hour = japanTime.getHours();
-    const minute = japanTime.getMinutes();
-    const date = japanTime.getDate();
-    const day = japanTime.toLocaleDateString('en-US', { weekday: 'long' });
-    const month = japanTime.toLocaleDateString('en-US', { month: 'long' });
-    const year = japanTime.getFullYear();
+export const getJapanTimeAsObject = (isoString?: string): {
+    year: number;
+    month: string;
+    date: number;
+    day: string;
+    hour: number;
+    minute: number;
+} => {
+    const japanTime = isoString ? getJapanTime(isoString) : getJapanTime();
 
     return {
-        year,
-        month,
-        date,
-        day,
+        year: japanTime.year,
+        month: japanTime.toFormat('MMMM'),
+        date: japanTime.day,
+        day: japanTime.toFormat('EEEE'),
+        hour: japanTime.hour,
+        minute: japanTime.minute,
     }
+}
+
+export const isSameDateWithTodayJapanTime = (targetISOString: string): boolean => {
+    const targetJapanTime = getJapanTime(targetISOString);
+    const todayJapanTime = getJapanTime();
+    return isSameDate(targetJapanTime, todayJapanTime);
 }
