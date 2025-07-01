@@ -6,7 +6,11 @@ import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { trpc } from "@/lib/trpc/client";
 
-export const Test = () => {
+type TestProps = {
+  refetchUpcomingSlots: () => void;
+}
+
+export const Test = ({refetchUpcomingSlots}: TestProps) => {
   const [channels, {error: channelsError}] = trpc.channel.getAll.useSuspenseQuery();
   const {mutate: notifyMutation, isPending: loadingNotifyMutation} = trpc.cronjob.notify.useMutation();
   const [selectedChannels, setSelectedChannels] = useState<Set<string>>(new Set());
@@ -45,6 +49,7 @@ export const Test = () => {
       onSuccess: (result) => {
         if (result.success) {
           toast.success('Notified successfully');
+          refetchUpcomingSlots();
         } else {
           toast.error('Notified failed');
         }

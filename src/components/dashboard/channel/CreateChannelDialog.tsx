@@ -9,7 +9,7 @@ import { Channel, channelSchema } from '@/models/channel';
 import { toast } from 'sonner';
 import { X } from 'lucide-react';
 import { User } from '@/models/user';
-import { Spinner } from '../ui/spinner';
+import { Spinner } from '@/components/ui/spinner';
 import { trpc } from '@/lib/trpc/client';
 
 interface ChannelDialogProps {

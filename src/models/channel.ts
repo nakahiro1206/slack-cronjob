@@ -9,6 +9,7 @@ export const dayEnum = z.enum([
     'TUESDAY',
     'WEDNESDAY',
 ]);
+export type DayEnum = z.infer<typeof dayEnum>;
 
 export const channelSchema = z.object({
     channelId: z.string().min(1),
@@ -17,4 +18,10 @@ export const channelSchema = z.object({
     day: dayEnum,
 });
 
+export const upcomingSlotSchema = z.object({
+    ...channelSchema.shape,
+    date: z.string().min(1),
+});
+
 export type Channel = z.infer<typeof channelSchema>;
+export type UpcomingSlot = z.infer<typeof upcomingSlotSchema>;

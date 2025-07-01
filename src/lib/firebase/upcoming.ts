@@ -1,34 +1,77 @@
 import { db } from "./client";
 import { Err, Ok, Result } from "../result";
-import { Channel, channelSchema } from "@/models/channel";
+import { Channel, channelSchema, UpcomingSlot, upcomingSlotSchema } from "@/models/channel";
+import { findNextMeetingDate, getJapanTime } from "@/lib/date";
+import { getChannels } from "./channel";
 import { collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc } from "firebase/firestore";
 
-export const getChannels = async (): Promise<Result<Channel[], Error>> => {
+export const getUpcomingSlots = async (): Promise<Result<UpcomingSlot[], Error>> => {
     try {
-        const channelsRef = collection(db, 'channels');
+        const channelsRef = collection(db, 'upcoming');
         const snapshot = await getDocs(channelsRef);
         const channels = snapshot.docs.map((doc) => {
-            const parsed = channelSchema.safeParse(doc.data());
+            const parsed = upcomingSlotSchema.safeParse(doc.data());
             if (!parsed.success) {
                 return undefined;
             }
             return parsed.data;
-        }).filter((channel): channel is Channel => channel !== undefined);
+        }).filter((channel): channel is UpcomingSlot => channel !== undefined);
         return Ok(channels);
     } catch (error) {
-        return Err<Channel[], Error>(error as Error);
+        return Err<UpcomingSlot[], Error>(error as Error);
     }
+}
+
+export const initializeUpcomingSlots = async (): Promise<Result<void, Error>> => {
+    const channelsResult = await getChannels();
+    const result = channelsResult.match<Result<void, Error>>(
+        (channels) => {
+            const japanNow = getJapanTime();
+            channels.forEach((channel) => {
+                const nextMeetingDate = findNextMeetingDate(japanNow,channel.day);
+                const upcomingSlotRef = doc(collection(db, 'upcoming'), channel.channelId);
+                setDoc(upcomingSlotRef, {
+                    ...channel,
+                    date: nextMeetingDate.toISOString(),
+                });
+            });
+            return Ok(undefined);
+        },
+        (error) => {
+            return Err(error);
+        }
+    )
+    return result;
+}
+
+export const initializeNextWeekSlots = async (channels: Channel[]): Promise<void> => {
+    const results = channels.map((channel) => {
+        const japanTomorrow = getJapanTime();
+        japanTomorrow.setDate(japanTomorrow.getDate() + 1);
+        const nextMeetingDate = findNextMeetingDate(japanTomorrow, channel.day);
+        try {
+            const upcomingSlotRef = doc(collection(db, 'upcoming'), channel.channelId);
+            setDoc(upcomingSlotRef, {
+                ...channel,
+                date: nextMeetingDate.toISOString(),
+            });
+            return Ok(undefined)
+        } catch (error) {
+            return Err(new Error(`${error}`))
+        }
+    });
+    return undefined;
 }
 
 export const getChannelById = async (channelId: string): Promise<Result<Channel, Error>> => {
     try {
-        const channelsRef = collection(db, 'channels');
+        const channelsRef = collection(db, 'upcoming');
         const docRef = doc(channelsRef, channelId);
         const docSnap = await getDoc(docRef);
         if (!docSnap.exists()) {
             return Err(new Error('Channel not found'));
         }
-        const parsed = channelSchema.safeParse(docSnap.data());
+        const parsed = upcomingSlotSchema.safeParse(docSnap.data());
         if (!parsed.success) {
             return Err(new Error('Invalid channel data'));
         }
@@ -40,7 +83,7 @@ export const getChannelById = async (channelId: string): Promise<Result<Channel,
 
 export const addChannel = async (channel: Channel): Promise<Result<void, Error>> => {
     try {
-        const channelsRef = collection(db, 'channels');
+        const channelsRef = collection(db, 'upcoming');
         const docRef = doc(channelsRef, channel.channelId);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
@@ -55,7 +98,7 @@ export const addChannel = async (channel: Channel): Promise<Result<void, Error>>
 
 export const updateChannel = async (channel: Channel): Promise<Result<void, Error>> => {
     try {
-        const channelsRef = collection(db, 'channels');
+        const channelsRef = collection(db, 'upcoming');
         const docRef = doc(channelsRef, channel.channelId);
         const docSnap = await getDoc(docRef);
         if (!docSnap.exists()) {
@@ -70,7 +113,7 @@ export const updateChannel = async (channel: Channel): Promise<Result<void, Erro
 
 export const deleteChannel = async (channelId: string): Promise<Result<void, Error>> => {
     try {
-        const channelsRef = collection(db, 'channels');
+        const channelsRef = collection(db, 'upcoming');
         const docRef = doc(channelsRef, channelId);
         const docSnap = await getDoc(docRef);
         if (!docSnap.exists()) {
@@ -85,15 +128,15 @@ export const deleteChannel = async (channelId: string): Promise<Result<void, Err
 
 export const getChannelByUserId = async (userId: string): Promise<Result<Channel, Error>> => {
     try {
-        const channelsRef = collection(db, 'channels');
+        const channelsRef = collection(db, 'upcoming');
         const snapshot = await getDocs(channelsRef);
         const channels = snapshot.docs.map((doc) => {
-            const parsed = channelSchema.safeParse(doc.data());
+            const parsed = upcomingSlotSchema.safeParse(doc.data());
             if (!parsed.success) {
                 return undefined;  
             }
             return parsed.data;
-        }).filter((channel): channel is Channel => channel !== undefined);
+        }).filter((channel): channel is UpcomingSlot => channel !== undefined);
         const channel = channels.find((channel) => channel.userIds.includes(userId));
         if (!channel) {
             return Err(new Error(`Channel not found for user ${userId}`));
@@ -106,17 +149,13 @@ export const getChannelByUserId = async (userId: string): Promise<Result<Channel
 
 export const registerUsers = async (channelId: string, userIds: string[]): Promise<Result<void, Error>> => {
     try {
-        const channelsRef = collection(db, 'channels');
+        const channelsRef = collection(db, 'upcoming');
         const docRef = doc(channelsRef, channelId);
         const docSnap = await getDoc(docRef);
         if (!docSnap.exists()) {
             return Err(new Error('Channel not found'));
         }
-        const parsed = channelSchema.safeParse(docSnap.data())
-        if (parsed.success === false) {
-            return Err(new Error('data form is invalid'))
-        }
-        const channel = parsed.data;
+        const channel = docSnap.data() as Channel;
         const newUserIds = new Set([...channel.userIds, ...userIds]);
         channel.userIds = Array.from(newUserIds);
         await updateDoc(docRef, channel);
@@ -128,13 +167,13 @@ export const registerUsers = async (channelId: string, userIds: string[]): Promi
 
 export const removeUsers = async (channelId: string, userIds: string[]): Promise<Result<void, Error>> => {
     try {
-        const channelsRef = collection(db, 'channels');
+        const channelsRef = collection(db, 'upcoming');
         const docRef = doc(channelsRef, channelId);
         const docSnap = await getDoc(docRef);
         if (!docSnap.exists()) {
             return Err(new Error('Channel not found'));
         }
-        const parsed = channelSchema.safeParse(docSnap.data())
+        const parsed = upcomingSlotSchema.safeParse(docSnap.data())
         if (parsed.success === false) {
             return Err(new Error('data form is invalid'))
         }
@@ -143,6 +182,29 @@ export const removeUsers = async (channelId: string, userIds: string[]): Promise
         userIds.forEach((userId) => newUserIds.delete(userId));
         channel.userIds = Array.from(newUserIds);
         await updateDoc(docRef, channel);
+        return Ok(undefined);
+    } catch (error) {
+        return Err<void, Error>(new Error('Failed to remove users: ' + error));
+    }
+}
+
+export const changeData = async (channelId: string, isoString: string) => {
+    try {
+        const channelsRef = collection(db, 'upcoming');
+        const docRef = doc(channelsRef, channelId);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) {
+            return Err(new Error('Channel not found'));
+        }
+        const parsed = upcomingSlotSchema.safeParse(docSnap.data())
+        if (parsed.success === false) {
+            return Err(new Error('data form is invalid'))
+        }
+        const channel = parsed.data;
+        await updateDoc(docRef, {
+            ...channel,
+            date: isoString,
+        });
         return Ok(undefined);
     } catch (error) {
         return Err<void, Error>(new Error('Failed to remove users: ' + error));

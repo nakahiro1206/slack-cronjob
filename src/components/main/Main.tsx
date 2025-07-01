@@ -1,16 +1,17 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Suspense, useEffect, useState } from 'react';
 import { Test } from "@/components/test/Test";
-import { UserCard } from '../dashboard/UserCard';
+import { UserCard } from '../dashboard/user/UserCard';
 import { toast } from 'sonner';
 import { Spinner } from '../ui/spinner';
-import { UserDialog } from '../dashboard/UserDialog';
-import { ChannelDialog } from '../dashboard/ChannelDialog';
-import { ChannelCard } from '../dashboard/ChannelCard';
+import { UserDialog } from '../dashboard/user/UserDialog';
+import { ChannelDialog } from '../dashboard/channel/CreateChannelDialog';
+import { ChannelCardList } from '../dashboard/channel/ChannelCard';
 import { trpc } from '@/lib/trpc/client';
-import { Card } from '../ui/card';
+import { UpcomingCardList } from '../dashboard/upcoming/UpcomingCardList';
 
 export const MainInternal = () => {
+  const [upcomingSlots, {error: upcomingSlotsError, refetch: refetchUpcomingSlots}] = trpc.upcoming.getAll.useSuspenseQuery();
   const [channels, {error: channelsError, refetch: refetchChannels}] = trpc.channel.getAll.useSuspenseQuery();
   const [users, {error: usersError, refetch: refetchUsers}] = trpc.user.getAll.useSuspenseQuery();
 
@@ -31,13 +32,24 @@ export const MainInternal = () => {
   useEffect(() => {
     if (channelsError) toast.error(channelsError.message);
     if (usersError) toast.error(usersError.message);
-  }, [channelsError, usersError]);
+    if (upcomingSlotsError) toast.error(upcomingSlotsError.message);
+  }, [channelsError, usersError, upcomingSlotsError]);
 
   return (
   <>
+    <TabsContent value="upcoming">
+      <UpcomingCardList 
+        upcomingSlots={upcomingSlots} 
+        users={users.map((user) => ({
+          userId: user.id,
+          userName: user.name,
+        }))} 
+        refetchUpcomingSlots={refetchUpcomingSlots} 
+      />
+    </TabsContent>
     <TabsContent value="channels">
       <>
-        <ChannelCard 
+        <ChannelCardList
               refetchChannels={refetchChannels}
               channels={channels} 
               users={users.map((user) => ({
@@ -73,6 +85,9 @@ export const MainInternal = () => {
           />
       </>
     </TabsContent>
+    <TabsContent value="test">
+      <Test refetchUpcomingSlots={refetchUpcomingSlots}/>
+    </TabsContent>
   </>
   )
 }
@@ -83,8 +98,9 @@ export const Main = () => {
       <div className="max-w-7xl mx-auto p-8">
         <h1 className="text-3xl font-bold mb-6 text-gray-800">1on1 Organizer</h1>
 
-        <Tabs defaultValue="channels" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+        <Tabs defaultValue="upcoming" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsTrigger value="upcoming">🗓️ Upcoming</TabsTrigger>
             <TabsTrigger value="channels">⚙️ Channels</TabsTrigger>
             <TabsTrigger value="users">👥 Users</TabsTrigger>
             <TabsTrigger value="test">🧪 Test</TabsTrigger>
@@ -92,6 +108,11 @@ export const Main = () => {
 
           <Suspense fallback={
             <>
+            <TabsContent value="upcoming">
+                <div className="p-8 text-center">
+                  <Spinner />
+                </div>
+            </TabsContent>
             <TabsContent value="channels">
                 <div className="p-8 text-center">
                   <Spinner />
@@ -102,18 +123,15 @@ export const Main = () => {
                   <Spinner />
                 </div>
           </TabsContent>
+          <TabsContent value="test"> 
+            <div className="p-8 text-center">
+              <Spinner />
+            </div>
+          </TabsContent>
           </>
           }>
             <MainInternal />
           </Suspense>
-
-          <TabsContent value="test">
-            <Card className="p-4">
-              <Suspense fallback={<div className="text-center">Loading test data...</div>}>
-                <Test />
-              </Suspense>
-            </Card>
-          </TabsContent>
         </Tabs>
       </div>
     </div>

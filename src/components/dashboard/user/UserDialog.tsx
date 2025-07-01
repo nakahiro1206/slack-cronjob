@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { userSchema } from '@/models/user';
 import { toast } from 'sonner';
-import { Spinner } from '../ui/spinner';
+import { Spinner } from '@/components/ui/spinner';
 import { trpc } from '@/lib/trpc/client';
 
 interface UserDialogProps {

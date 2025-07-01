@@ -1,9 +1,9 @@
 import React, { FC } from 'react';
 import { PlusIcon } from '@heroicons/react/24/solid';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
-import { Button } from '../ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 import type { User } from '@/models/user';
-import { Card } from '../ui/card';
+import { Card } from '@/components/ui/card';
 
 type Props = {
     users: User[] | undefined;

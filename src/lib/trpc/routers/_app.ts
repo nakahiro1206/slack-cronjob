@@ -4,6 +4,7 @@ import { cronjobRouter } from './cronjob';
 import { simpleRouter } from './simple';
 import { userRouter } from './user';
 import { authRouter } from './auth';
+import { upcomingRouter } from './upcoming';
 
 export const appRouter = router({
   simple: simpleRouter,
@@ -11,6 +12,7 @@ export const appRouter = router({
   channel: channelRouter,
   cronjob: cronjobRouter,
   auth: authRouter,
+  upcoming: upcomingRouter,
 });
 
 export type AppRouter = typeof appRouter; 

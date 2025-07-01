@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { ChannelDialog } from './ChannelDialog';
-import { UserDialog } from './UserDialog';
-import { ChannelCard } from './ChannelCard';
-import { UserCard } from './UserCard';
+import { ChannelDialog } from './channel/CreateChannelDialog';
+import { UserDialog } from './user/UserDialog';
+import { ChannelCardList } from './channel/ChannelCard';
+import { UserCard } from './user/UserCard';
 import { trpc } from '@/lib/trpc/client';
 
 export const Dashboard = () => {
@@ -35,7 +35,7 @@ export const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="flex gap-8">
-        <ChannelCard 
+        <ChannelCardList 
             refetchChannels={refetchChannels}
             channels={channels} 
             users={users.map((user) => ({
