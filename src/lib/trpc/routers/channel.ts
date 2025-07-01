@@ -4,6 +4,7 @@ import {
     getChannels,
     addChannel as addChannelFirebase,
     registerUsers as registerUsersFirebase,
+    removeUsers as removeUsersFirebase,
 } from '@/lib/firebase/channel';
 import { dayEnum } from '@/models/channel';
 
@@ -69,6 +70,32 @@ export const channelRouter = router({
         },
         (error) => {
           console.error('Failed to register users:', error);
+          return {
+            success: false,
+            error: error.message,
+          };
+        }
+      );
+    }),
+
+  removeUsers: publicProcedure
+    .input(z.object({
+      channelId: z.string().min(1),
+      userIds: z.array(z.string()),
+    }))
+    .mutation(async ({ input }) => {
+      const removeUsersResult = await removeUsersFirebase(input.channelId, input.userIds);
+      return removeUsersResult.match<{
+        success: boolean;
+        error?: string;
+      }>(
+        (channel) => {
+          return {
+            success: true,
+          };
+        },
+        (error) => {
+          console.error('Failed to remove users:', error);
           return {
             success: false,
             error: error.message,

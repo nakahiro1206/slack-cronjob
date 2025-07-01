@@ -13,10 +13,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Badge } from '../ui/badge';
-import { MoreHorizontalIcon, MoreVertical, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Spinner } from '../ui/spinner';
 import { trpc } from '@/lib/trpc/client';
-import { Checkbox } from '../ui/checkbox';
 
 const UserSelectDialogButton = ({ channelId, unregisteredUsers, refetchChannels }: { channelId: string, unregisteredUsers: User[], refetchChannels: () => void }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -149,57 +148,6 @@ type Props = {
     refetchChannels: () => void;
 }
 export const ChannelCard: FC<Props> = ({ channels, users, openChannelDialog, refetchChannels }) => {
-    const [isHandlingRemoveUsers, setIsHandlingRemoveUsers] = useState(false);
-    const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
-    const [selectedRemoveUserIds, setSelectedRemoveUserIds] = useState<string[]>([]);
-    const {mutate: removeUsersMutation, isPending: loadingRemoveUsersMutation } = trpc.channel.removeUsers.useMutation();
-
-    const startHandlingRemoveUsers = (channelId: string) => {
-        setIsHandlingRemoveUsers(true);
-        setSelectedChannelId(channelId);
-        setSelectedRemoveUserIds([]);
-    }
-
-    const endHandlingRemoveUsers = () => {
-        setIsHandlingRemoveUsers(false);
-        setSelectedChannelId(null);
-        setSelectedRemoveUserIds([]);
-    }
-
-    const toggleSelectedRemoveUser = (userId: string) => {
-        if (selectedRemoveUserIds.includes(userId)) {
-            setSelectedRemoveUserIds(selectedRemoveUserIds.filter(id => id !== userId));
-        } else {
-            setSelectedRemoveUserIds([...selectedRemoveUserIds, userId]);
-        }
-    }
-
-    const executeRemoveUsers = () => {
-        if (!selectedChannelId) {
-            toast.error('No channel selected');
-            return;
-        }
-        if (selectedRemoveUserIds.length === 0) {
-            toast.error('No users selected');
-            return;
-        }
-        removeUsersMutation({ channelId: selectedChannelId, userIds: selectedRemoveUserIds }, {
-            onSuccess: (result) => {
-                if (result.success) {
-                    toast.success('Users removed successfully');
-                    refetchChannels();
-                    endHandlingRemoveUsers();
-                } else {
-                    toast.error('Failed to remove users');
-                }
-            }, 
-            onError: (error) => {
-                toast.error(error.message);
-                endHandlingRemoveUsers();
-            }
-        });
-    }
-
     return (
         <Card className="p-4">
             <div className="flex items-center justify-between mb-2">
@@ -213,26 +161,9 @@ export const ChannelCard: FC<Props> = ({ channels, users, openChannelDialog, ref
                 <Card key={channel.channelId} className="p-4">
                 <div className="w-full flex justify-between">
                     <h2 className="text-xl font-semibold">{channel.channelName}</h2>
-                    <div className="flex flex-col items-end gap-2">
-                        <UserSelectDialogButton channelId={channel.channelId} 
-                        unregisteredUsers={users?.filter(user => !channel.userIds.includes(user.userId)) || []} 
-                        refetchChannels={refetchChannels} />
-                        {selectedChannelId === channel.channelId && isHandlingRemoveUsers && (
-                            <div className="flex items-center gap-2 justify-end">
-                                <Button variant="outline" onClick={executeRemoveUsers} disabled={loadingRemoveUsersMutation || selectedRemoveUserIds.length === 0}>
-                                    {loadingRemoveUsersMutation ? <Spinner /> : 'Remove Users'}
-                                </Button>
-                                <Button variant="outline" onClick={endHandlingRemoveUsers}>
-                                    Cancel
-                                </Button>
-                            </div>
-                        )}
-                        {isHandlingRemoveUsers === false && (
-                            <Button variant="outline" onClick={() => startHandlingRemoveUsers(channel.channelId)}>
-                                Remove Users
-                            </Button>
-                        )}
-                    </div>
+                    <UserSelectDialogButton channelId={channel.channelId} 
+                    unregisteredUsers={users?.filter(user => !channel.userIds.includes(user.userId)) || []} 
+                    refetchChannels={refetchChannels} />
                 </div>
                 <Table>
                     <TableHeader>
@@ -258,11 +189,9 @@ export const ChannelCard: FC<Props> = ({ channels, users, openChannelDialog, ref
                                     </div>}
                                 </TableCell>
                                 <TableCell>
-                                    
-                                        {isHandlingRemoveUsers && selectedChannelId === channel.channelId ?
-                                            <Checkbox checked={selectedRemoveUserIds.includes(userId)} onCheckedChange={() => toggleSelectedRemoveUser(userId)} /> :
-                                            <MoreHorizontalIcon className="h-4 w-4" />
-                                        }
+                                    <Button variant="outline">
+                                        <TrashIcon className="h-4 w-4" />
+                                    </Button>
                                 </TableCell>
                             </TableRow>;
                         })}

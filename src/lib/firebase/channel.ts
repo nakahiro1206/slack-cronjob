@@ -118,6 +118,25 @@ export const registerUsers = async (channelId: string, userIds: string[]): Promi
         await updateDoc(docRef, channel);
         return Ok(undefined);
     } catch (error) {
-        return Err<void, Error>(error as Error);
+        return Err<void, Error>(new Error('Failed to register users: ' + error));
+    }
+}
+
+export const removeUsers = async (channelId: string, userIds: string[]): Promise<Result<void, Error>> => {
+    try {
+        const channelsRef = collection(db, 'channels');
+        const docRef = doc(channelsRef, channelId);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) {
+            return Err(new Error('Channel not found'));
+        }
+        const channel = docSnap.data() as Channel;
+        const newUserIds = new Set([...channel.userIds]);
+        userIds.forEach((userId) => newUserIds.delete(userId));
+        channel.userIds = Array.from(newUserIds);
+        await updateDoc(docRef, channel);
+        return Ok(undefined);
+    } catch (error) {
+        return Err<void, Error>(new Error('Failed to remove users: ' + error));
     }
 }
