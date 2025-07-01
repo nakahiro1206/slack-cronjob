@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { ChannelDialog } from './channel/CreateChannelDialog';
 import { UserDialog } from './user/UserDialog';
-import { ChannelCardList } from './channel/ChannelCard';
+import { ChannelCardList } from './channel/ChannelCardList';
 import { UserCard } from './user/UserCard';
 import { trpc } from '@/lib/trpc/client';
 

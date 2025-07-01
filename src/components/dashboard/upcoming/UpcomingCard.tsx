@@ -13,6 +13,7 @@ import { Checkbox } from '../../ui/checkbox';
 import { UserSelectDialogButton } from './DialogButton';
 import { DatePicker } from '../../ui/date-picker';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../../ui/dialog';
+import { Badge } from '@/components/ui/badge';
 
 type UpcomingCardProps = {
     channel: UpcomingSlot
@@ -71,10 +72,6 @@ export const UpcomingCard = ({
         });
     }
 
-    const handleDateChange = (date: Date | undefined) => {
-        setSelectedDate(date);
-    }
-
     const executeDateChange = () => {
         if (!selectedDate) {
             toast.error('Please select a date');
@@ -109,14 +106,19 @@ export const UpcomingCard = ({
         setIsDateDialogOpen(false);
         setSelectedDate(getJapanTime(channel.date));
     }
+
+    const {day, date, month, year} = getJapanTimeFromISOString(channel.date);
     return (<>
         <Card key={channel.channelId} className="p-4">
         <div className="w-full flex justify-between">
             <div className="flex flex-col gap-2">
-                <h2 className="text-xl font-semibold">{channel.channelName}</h2>
+                <div className="flex flex-row items-center gap-2">
+                    <div className="text-xl font-semibold">{channel.channelName}</div>
+                    <Badge variant="outline">{channel.day}</Badge>
+                </div>
                 <div className="flex items-center gap-2">
                     <div className="text-sm text-gray-500">
-                        {getJapanTimeFromISOString(channel.date).day} {getJapanTimeFromISOString(channel.date).date} {getJapanTimeFromISOString(channel.date).month} {getJapanTimeFromISOString(channel.date).year}
+                        {day} {date} {month} {year}
                     </div>
                     <Button 
                         variant="ghost" 

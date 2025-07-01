@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { Spinner } from '../ui/spinner';
 import { UserDialog } from '../dashboard/user/UserDialog';
 import { ChannelDialog } from '../dashboard/channel/CreateChannelDialog';
-import { ChannelCardList } from '../dashboard/channel/ChannelCard';
+import { ChannelCardList } from '../dashboard/channel/ChannelCardList';
 import { trpc } from '@/lib/trpc/client';
 import { UpcomingCardList } from '../dashboard/upcoming/UpcomingCardList';
 
