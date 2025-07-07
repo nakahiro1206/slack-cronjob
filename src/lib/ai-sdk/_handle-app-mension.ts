@@ -1,6 +1,7 @@
 import { AppMentionEvent } from "@slack/web-api";
 import { client, getThread } from "./slack-utils";
 import { generateResponse } from "./generate-response";
+import { CoreMessage } from "ai";
 
 const updateStatusUtil = async (
   initialStatus: string,
@@ -8,6 +9,7 @@ const updateStatusUtil = async (
 ) => {
   const initialMessage = await client.chat.postMessage({
     channel: event.channel,
+    thread_ts: event.thread_ts ?? event.ts,
     text: initialStatus,
   });
 
@@ -24,11 +26,11 @@ const updateStatusUtil = async (
   return updateMessage;
 };
 
-export async function handleNewAppMentionPost(
+export async function handleNewAppMention(
   event: AppMentionEvent,
   botUserId: string,
 ) {
-  console.log("Handling app mention - posting to channel");
+  console.log("Handling app mention");
   if (event.bot_id || event.bot_id === botUserId || event.bot_profile) {
     console.log("Skipping app mention");
     return;
@@ -39,7 +41,11 @@ export async function handleNewAppMentionPost(
 
   if (thread_ts) {
     const messages = await getThread(channel, thread_ts, botUserId);
-    const result = await generateResponse(messages, updateMessage);
+    const queries: CoreMessage[] = messages.map((m) => ({
+      role: m.role,
+      content: m.text,
+    }));
+    const result = await generateResponse(queries, updateMessage);
     await updateMessage(result);
   } else {
     const result = await generateResponse(
@@ -48,4 +54,4 @@ export async function handleNewAppMentionPost(
     );
     await updateMessage(result);
   }
-} 
+}

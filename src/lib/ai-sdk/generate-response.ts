@@ -9,10 +9,13 @@ export const generateResponse = async (
 ) => {
   const { text } = await generateText({
     model: openai("gpt-4o"),
-    system: `You are a Slack bot assistant Keep your responses concise and to the point.
-    - Do not tag users.
-    - Current date is: ${new Date().toISOString().split("T")[0]}
-    - Make sure to ALWAYS include sources in your final response if you use web search. Put sources inline if possible.`,
+    system: `You are a Slack bot assistant.
+    - Re-organize the order based on the intial order and given user's request.
+    - user tag is represented as <@user_id>. You should keep this format in your respone`,
+    // system: `You are a Slack bot assistant Keep your responses concise and to the point.
+    // - Do not tag users.
+    // - Current date is: ${new Date().toISOString().split("T")[0]}
+    // - Make sure to ALWAYS include sources in your final response if you use web search. Put sources inline if possible.`,
     messages,
     maxSteps: 10,
     tools: {
@@ -70,6 +73,8 @@ export const generateResponse = async (
     },
   });
 
+  const t = text; //  + messages.map((m) => `${m.role}: ${m.content}`).join("\n");
+
   // Convert markdown to Slack mrkdwn format
-  return text.replace(/\[(.*?)\]\((.*?)\)/g, "<$2|$1>").replace(/\*\*/g, "*");
+  return t.replace(/\[(.*?)\]\((.*?)\)/g, "<$2|$1>").replace(/\*\*/g, "*");
 };

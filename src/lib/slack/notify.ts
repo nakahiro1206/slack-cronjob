@@ -3,6 +3,7 @@ import type { Channel } from '@/models/channel';
 import {Random} from 'random';
 import { getJapanTimeAsObject, isSameDateWithTodayJapanTime } from '@/lib/date';
 import { getUpcomingSlots, initializeNextWeekSlots } from '@/lib/firebase/upcoming';
+import { SlackMessageBlocks } from './message';
 
 type NotifyResult = {
     success: boolean;
@@ -39,13 +40,10 @@ async function postMessage({
   const userMentions = shuffledUserIds.map(userId => `- <@${userId}>`).join('\n');
 
   // Create the message
-  const message = {
-    channel: channel.channelId,
-    text: `*📣1on1 order for ${channel.channelName}*`,
-    blocks: [
-      {
-        type: 'section',
-        fields: [
+  const blocks: SlackMessageBlocks = [
+    {
+      type: 'section',
+      fields: [
         {
           type: 'mrkdwn',
           text: `*📣 1on1 order for ${channel.channelName}* \n This message was automatically posted by your Vercel cronjob.`
@@ -54,19 +52,21 @@ async function postMessage({
           type: 'mrkdwn',
           text: `*⏰ Date (UTC+9):*\n ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${day}, ${month} ${date}, ${year}`
         },
-        ]
-      },
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: `*📋 Order:*\n${userMentions}`
-        }
-      },
-    ]
-  };
+      ]
+    },
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `*📋 Order:*\n${userMentions}`
+      }
+    }
+  ]
 
-  const result = await slack.chat.postMessage(message);
+  const result = await slack.chat.postMessage({
+    channel: channel.channelId,
+    blocks: blocks
+  });
   return {
     channelName: channel.channelName,
     ok: result.ok,

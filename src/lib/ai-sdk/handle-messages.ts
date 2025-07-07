@@ -4,6 +4,7 @@ import type {
   } from "@slack/web-api";
   import { client, getThread, updateStatusUtil } from "./slack-utils";
   import { generateResponse } from "./generate-response";
+import { CoreMessage } from "ai";
   
   export async function assistantThreadMessage(
     event: AssistantThreadStartedEvent,
@@ -51,7 +52,11 @@ import type {
     await updateStatus("is thinking...");
   
     const messages = await getThread(channel, thread_ts, botUserId);
-    const result = await generateResponse(messages, updateStatus);
+    const queries: CoreMessage[] = messages.map((m) => ({
+      role: m.role,
+      content: m.text,
+    }));
+    const result = await generateResponse(queries, updateStatus);
   
     await client.chat.postMessage({
       channel: channel,

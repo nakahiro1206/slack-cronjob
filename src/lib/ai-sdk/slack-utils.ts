@@ -1,5 +1,5 @@
 import { WebClient } from '@slack/web-api';
-import { CoreMessage } from 'ai'
+import { PurpleBlock } from '@slack/web-api/dist/response/ConversationsHistoryResponse';
 import crypto from 'crypto'
 
 const signingSecret = process.env.SLACK_SIGNING_SECRET!
@@ -69,11 +69,22 @@ export const updateStatusUtil = (channel: string, thread_ts: string) => {
   };
 };
 
+// This function is used to get the thread of a message
+// The response includes the first message connected to the thread
 export async function getThread(
   channel_id: string,
   thread_ts: string,
   botUserId: string,
-): Promise<CoreMessage[]> {
+): Promise<{
+  role: "assistant" | "user",
+  ts: string | undefined,
+  isBot: boolean,
+  botId: string | undefined,
+  appId: string | undefined,
+  user: string | undefined,
+  text: string,
+  blocks: PurpleBlock[] | undefined,
+}[]> {
   const { messages } = await client.conversations.replies({
     channel: channel_id,
     ts: thread_ts,
@@ -86,6 +97,7 @@ export async function getThread(
 
   const result = messages
     .map((message) => {
+      const ts = message.ts;// can update the 1st message with this!
       const isBot = !!message.bot_id;
       if (!message.text) return null;
 
@@ -96,12 +108,28 @@ export async function getThread(
         content = content.replace(`<@${botUserId}> `, "");
       }
 
-      return {
+      const msg: {
+        role: "assistant" | "user",
+        ts: string | undefined,
+        isBot: boolean,
+        appId: string | undefined,
+        botId: string | undefined,
+        user: string | undefined,
+        text: string,
+        blocks: PurpleBlock[] | undefined,
+      } = {
         role: isBot ? "assistant" : "user",
-        content: content,
-      } as CoreMessage;
+        ts: ts,
+        isBot: isBot,
+        appId: message.app_id,
+        user: message.user,
+        botId: isBot ? message.bot_id : undefined,
+        text: message.text,
+        blocks: message.blocks,
+      }
+      return msg;
     })
-    .filter((msg): msg is CoreMessage => msg !== null);
+    .filter((msg) => msg !== null);
 
   return result;
 }
@@ -114,3 +142,9 @@ export const getBotId = async () => {
   }
   return botUserId;
 };
+
+export const removeBotUserIdTag = (text: string, botUserId: string) => {
+  console.log("text", text);
+  console.log("botUserId", botUserId);
+  return text.replace(`<@${botUserId}>`, "");
+}
