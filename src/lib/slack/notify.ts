@@ -1,7 +1,7 @@
 import { WebClient } from '@slack/web-api';
 import type { Channel } from '@/models/channel';
 import {Random} from 'random';
-import { getJapanTimeAsObject, isSameDateWithTodayJapanTime } from '@/lib/date';
+import { getJapanTimeAsObject, isSameDateWithTodayJapanTime, isSameOrBeforeTodayJapanTime } from '@/lib/date';
 import { getUpcomingSlots, initializeNextWeekSlots } from '@/lib/firebase/upcoming';
 import { SlackMessageBlocks } from './message';
 
@@ -65,6 +65,7 @@ async function postMessage({
 
   const result = await slack.chat.postMessage({
     channel: channel.channelId,
+    text: '1on1 order',
     blocks: blocks
   });
   return {
@@ -137,7 +138,8 @@ export const notify = async (args: NotifyArgs): Promise<NotifyResult> => {
       });
     }));
 
-    initializeNextWeekSlots(targetChannels.map((c) => c.channelId));
+    const outdatedChannels = channels.filter((c) => isSameOrBeforeTodayJapanTime(c.date));
+    await initializeNextWeekSlots(outdatedChannels.map((c) => c.channelId));
     
     const failedChannels = results.map((result) => {
       if (result.ok) {

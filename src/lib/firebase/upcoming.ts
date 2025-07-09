@@ -24,20 +24,22 @@ export const getUpcomingSlots = async (): Promise<Result<UpcomingSlot[], Error>>
 
 export const initializeUpcomingSlots = async (): Promise<Result<void, Error>> => {
     const channelsResult = await getChannels();
-    const result = channelsResult.match<Result<void, Error>>(
-        (channels) => {
+    const result = channelsResult.match<Promise<Result<void, Error>>>(
+        async (channels) => {
             const japanNow = getJapanTime();
-            channels.forEach((channel) => {
+            await Promise.all(
+                channels.map(async (channel) => {
                 const nextMeetingDate = findNextMeetingDate(japanNow,channel.day);
                 const upcomingSlotRef = doc(collection(db, 'upcoming'), channel.channelId);
-                setDoc(upcomingSlotRef, {
+                await setDoc(upcomingSlotRef, {
                     ...channel,
                     date: nextMeetingDate || "",
                 });
-            });
+                return Ok(undefined);
+            }));
             return Ok(undefined);
         },
-        (error) => {
+        async (error) => {
             return Err(error);
         }
     )
@@ -47,14 +49,15 @@ export const initializeUpcomingSlots = async (): Promise<Result<void, Error>> =>
 export const initializeNextWeekSlots = async (channelIds: string[]): Promise<void> => {
     const japanTomorrow = getJapanTimeTomorrow();
     const channelResult = await getChannels();
-    return channelResult.match<void>(
-        (channels) => {
-            channels.forEach((channel) => {
+    return channelResult.match<Promise<void>>(
+        async (channels) => {
+            await Promise.all(
+                channels.map(async (channel) => {
                 if ( channelIds.includes(channel.channelId) === true) {
                     const nextMeetingDate = findNextMeetingDate(japanTomorrow, channel.day);
                     try {
                         const upcomingSlotRef = doc(collection(db, 'upcoming'), channel.channelId);
-                        setDoc(upcomingSlotRef, {
+                        await setDoc(upcomingSlotRef, {
                             ...channel,
                             date: nextMeetingDate || "",
                         });
@@ -63,9 +66,9 @@ export const initializeNextWeekSlots = async (channelIds: string[]): Promise<voi
                         return Err(new Error(`${error}`))
                     }
                 }
-            })
+            }))
         },
-        (error) => {
+        async (error) => {
             return undefined
         }
     )
