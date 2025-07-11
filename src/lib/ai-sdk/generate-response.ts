@@ -11,11 +11,11 @@ export const generateResponse = async (
     model: openai("gpt-4o"),
     system: `You are a Slack bot assistant.
     - Re-organize the order based on the intial order and given user's request.
-    - user tag is represented as <@user_id>. You should keep this format in your respone`,
-    // system: `You are a Slack bot assistant Keep your responses concise and to the point.
-    // - Do not tag users.
-    // - Current date is: ${new Date().toISOString().split("T")[0]}
-    // - Make sure to ALWAYS include sources in your final response if you use web search. Put sources inline if possible.`,
+    - user tag is represented as <@user_id>. You should keep this format in your respone
+    - Every user tag should be unique.
+    - If the message does not contain any user tag, you should not add any user tag in your response and just return the message
+    - If not specified, the order is for offline meeting. So not-specified user request will be applied to offline meeting. If user request attendance for online meeting, you should create a separate order for online meeting.
+    - Online meeting is always listed before offline meeting. It would be nice if you decorate online meeting with 🌐 emoji.`,
     messages,
     maxSteps: 10,
     tools: {

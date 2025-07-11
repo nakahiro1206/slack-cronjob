@@ -1,7 +1,7 @@
 import { AppMentionEvent } from "@slack/web-api";
 import { client, getThread, removeBotUserIdTag } from "./slack-utils";
 import { generateResponse } from "./generate-response";
-import { createSlackMessageBlocks, extractMainContent, extractTextFromBlocks } from "../slack/message";
+import { createSlackMessageBlocks, extractMainContent, extractTextFromBlocks, extractTopLeftContent } from "../slack/message";
 import { getJapanTimeAsObject } from "../date";
 import { CoreMessage } from "ai";
 
@@ -78,9 +78,10 @@ export async function handleAppMention(
       blocks: createSlackMessageBlocks({
         top: {
           left: `*📣 Mockup 1on1 order* \n You can use this message to debug the bot.`,
-          right: `*⏰ Date (UTC+9):*\n ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${day}, ${month} ${date}, ${year}`,
+          right: `*⏰ Created at(UTC+9):*\n ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${day}, ${month} ${date}, ${year}`,
         },
         mainContent: `*📋 Order:*\n${["some", "users", "here"].map(userId => `- <@${userId}>`).join('\n')}`,
+        bottomContent: "Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
       }),
     });
 
@@ -99,6 +100,8 @@ export async function handleAppMention(
     console.log("bot user id", botUserId);
     if (messages.length > 1) {
       const firstMessage = messages[0];
+      const firstMessageTopLeftContent = extractTopLeftContent(firstMessage.blocks || [])
+      const firstMessageMainContent = extractMainContent(firstMessage.blocks || [])
       const lastMessage = messages[messages.length - 1];
       console.log("The first message is from the bot. updating it");
       // update the first message
@@ -109,11 +112,11 @@ export async function handleAppMention(
         text: 'updated by the bot',
         blocks: createSlackMessageBlocks({
           top: {
-            left: `*📣 Mockup 1on1 order* \n You can use this message to debug the bot.`,
-            right: `*⏰ Date (UTC+9):*\n ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${day}, ${month} ${date}, ${year}`,
+            left: firstMessageTopLeftContent,
+            right: `*⏰ Updated at(UTC+9):*\n ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${day}, ${month} ${date}, ${year}`,
           },
           mainContent: "is updating...",
-          // mainContent: `*📋 Order:*\n${["updated", "by", "the", "bot"].map(userId => `- <@${userId}>`).join('\n')}`,
+          bottomContent: "Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
         }),
       });
 
@@ -121,7 +124,7 @@ export async function handleAppMention(
 
       const queries: CoreMessage[] = [{
         role: "assistant",
-        content: extractMainContent(firstMessage.blocks || []).join('\n'),
+        content: firstMessageMainContent,
       }, {
         role: "user",
         content: removeBotUserIdTag(lastMessage.text, botUserId),
@@ -137,26 +140,18 @@ export async function handleAppMention(
         text: "updated by the bot",
         blocks: createSlackMessageBlocks({
           top: {
-            left: `*📣 Mockup 1on1 order* \n You can use this message to debug the bot.`,
-            right: `*⏰ Date (UTC+9):*\n ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${day}, ${month} ${date}, ${year}`,
+            left: firstMessageTopLeftContent,
+            right: `*⏰ Updated at(UTC+9):*\n ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${day}, ${month} ${date}, ${year}`,
           },
           mainContent: result,
+          bottomContent: "Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
         }),
       });
       return;
     }
     
-    // // Generate response with full thread context
-    // const result = await generateResponse(messages, updateMessage);
-    
-    // // Update with final response
-    // await updateMessage(result);
-    
     console.log("Successfully handled app mention in thread");
   } catch (error) {
     console.error("Error handling app mention in thread:", error);
-    
-    // Update with error message
-    // await updateMessage("Sorry, I encountered an error while processing your request. error details: " + error);
   }
 } 

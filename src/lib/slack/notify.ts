@@ -3,7 +3,7 @@ import type { Channel } from '@/models/channel';
 import {Random} from 'random';
 import { getJapanTimeAsObject, isSameDateWithTodayJapanTime, isSameOrBeforeTodayJapanTime } from '@/lib/date';
 import { getUpcomingSlots, initializeNextWeekSlots } from '@/lib/firebase/upcoming';
-import { SlackMessageBlocks } from './message';
+import {createSlackMessageBlocks} from './message';
 
 type NotifyResult = {
     success: boolean;
@@ -39,34 +39,18 @@ async function postMessage({
   const shuffledUserIds = channel.userIds.sort(() => rng.float(0, 1) - 0.5);
   const userMentions = shuffledUserIds.map(userId => `- <@${userId}>`).join('\n');
 
-  // Create the message
-  const blocks: SlackMessageBlocks = [
-    {
-      type: 'section',
-      fields: [
-        {
-          type: 'mrkdwn',
-          text: `*📣 1on1 order for ${channel.channelName}* \n This message was automatically posted by your Vercel cronjob.`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*⏰ Date (UTC+9):*\n ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${day}, ${month} ${date}, ${year}`
-        },
-      ]
-    },
-    {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: `*📋 Order:*\n${userMentions}`
-      }
-    }
-  ]
-
   const result = await slack.chat.postMessage({
     channel: channel.channelId,
     text: '1on1 order',
-    blocks: blocks
+    blocks: createSlackMessageBlocks({
+      top: {
+        // this message is posted in the morning of the day of meeting.
+        left: `*📣 1on1 order for ${channel.channelName}* \n This order is for the meeting on ${day}, ${month} ${date}, ${year}.`,
+        right: `*⏰ Created at (UTC+9):*\n ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${day}, ${month} ${date}, ${year}`
+      },
+      mainContent: `*📋 Order:*\n${userMentions}`,
+      bottomContent: "Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
+    })
   });
   return {
     channelName: channel.channelName,
