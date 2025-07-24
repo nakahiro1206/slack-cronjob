@@ -48,7 +48,7 @@ async function postMessage({
         left: `*📣 1on1 order for ${channel.channelName}* \n This order is for the meeting on ${day}, ${month} ${date}, ${year}.`,
         right: `*⏰ Created at (UTC+9):*\n ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${day}, ${month} ${date}, ${year}`
       },
-      mainContent: `*📋 Order:*\n${userMentions}`,
+      mainContent: `*📋 Offline Order:*\n${userMentions}`,
       bottomContent: "Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
     })
   });

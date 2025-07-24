@@ -80,7 +80,7 @@ export async function handleAppMention(
           left: `*📣 Mockup 1on1 order* \n You can use this message to debug the bot.`,
           right: `*⏰ Created at(UTC+9):*\n ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${day}, ${month} ${date}, ${year}`,
         },
-        mainContent: `*📋 Order:*\n${["some", "users", "here"].map(userId => `- <@${userId}>`).join('\n')}`,
+        mainContent: `*📋 Offline Order:*\n${["some", "users", "here"].map(userId => `- <@${userId}>`).join('\n')}`,
         bottomContent: "Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
       }),
     });
