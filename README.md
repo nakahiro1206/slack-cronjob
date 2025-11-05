@@ -2,6 +2,12 @@
 
 A Next.js application with Vercel cronjob integration to automatically post messages to Slack channels.
 
+## Todo Items
+
+- announce with concatenated members across multiple channels
+- get channel topic and automatically set channel members
+- operate database via slack messaging
+
 ## System Flow
 
 - Cronjob, Manual test always refers the date in the upcoming page. if there is some days correponding to execution date, the content will be posted to slack channels
