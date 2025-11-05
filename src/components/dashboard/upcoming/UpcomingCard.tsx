@@ -10,10 +10,11 @@ import { Spinner } from '../../ui/spinner';
 import { trpc } from '@/lib/trpc/client';
 import { getJapanTimeAsJSDate, getJapanTimeAsObject } from '@/lib/date';
 import { Checkbox } from '../../ui/checkbox';
-import { UserSelectDialogButton } from './DialogButton';
+import { UserSelectDialogButton } from './AddUserDialogButton';
 import { DatePicker } from '../../ui/date-picker';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../../ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { DeleteUpcomingSlotButton } from './CancelUpcomingDialogButton';
 
 type UpcomingCardProps = {
     channel: UpcomingSlot
@@ -28,10 +29,11 @@ export const UpcomingCard = ({
     const [isHandlingRemoveUsers, setIsHandlingRemoveUsers] = useState(false);
     const [selectedRemoveUserIds, setSelectedRemoveUserIds] = useState<string[]>([]);
     const [isDateDialogOpen, setIsDateDialogOpen] = useState(false);
-    // 
+
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(getJapanTimeAsJSDate(channel.date));
     const {mutate: removeUsersMutation, isPending: loadingRemoveUsersMutation } = trpc.upcoming.removeUsers.useMutation();
     const {mutate: changeDateMutation, isPending: loadingChangeDateMutation } = trpc.upcoming.changeDate.useMutation();
+    const {mutate: deleteUpcomingSlotMutation, isPending: loadingDeleteUpcomingSlotMutation } = trpc.upcoming.delete.useMutation();
 
     const startHandlingRemoveUsers = (channelId: string) => {
         setIsHandlingRemoveUsers(true);
@@ -108,6 +110,22 @@ export const UpcomingCard = ({
         setSelectedDate(getJapanTimeAsJSDate(channel.date));
     }
 
+    const handleDeleteUpcomingSlot = () => {
+        deleteUpcomingSlotMutation({ channelId: channel.channelId }, {
+            onSuccess: (result) => {
+                if (result.success) {
+                    toast.success('Upcoming slot deleted successfully');
+                    refetchChannels();
+                } else {
+                    toast.error('Failed to delete upcoming slot');
+                }
+            },
+            onError: (error) => {
+                toast.error(error.message);
+            }
+        });
+    }
+
     const {day, date, month, year} = getJapanTimeAsObject(channel.date);
     return (<>
         <Card key={channel.channelId} className="p-4">
@@ -116,6 +134,10 @@ export const UpcomingCard = ({
                 <div className="flex flex-row items-center gap-2">
                     <div className="text-xl font-semibold">{channel.channelName}</div>
                     <Badge variant="outline">{channel.day}</Badge>
+                    <DeleteUpcomingSlotButton
+                        onProceed={handleDeleteUpcomingSlot}
+                        onCancel={() => {}}
+                    />
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="text-sm text-gray-500">

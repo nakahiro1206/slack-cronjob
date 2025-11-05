@@ -3,7 +3,7 @@ import type { Channel } from '@/models/channel';
 import {Random} from 'random';
 import { getJapanTimeAsObject, isSameDateWithTodayJapanTime, isSameOrBeforeTodayJapanTime } from '@/lib/date';
 import { getUpcomingSlots, initializeNextWeekSlots } from '@/lib/firebase/upcoming';
-import {createSlackMessageBlocks} from './message';
+import {createSlackMessageBlocks} from './schema';
 
 type NotifyResult = {
     success: boolean;
@@ -60,11 +60,14 @@ async function postMessage({
 }
 
 type NotifyArgs = {
+  updateSlot: boolean;
+} & ({
   mode: 'sameDayOnly';
 } | {
   mode: 'specifiedChannels';
   channelIds: string[];
-}
+})
+
 export const notify = async (args: NotifyArgs): Promise<NotifyResult> => {
     // Initialize Slack client
     const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
@@ -96,11 +99,9 @@ export const notify = async (args: NotifyArgs): Promise<NotifyResult> => {
         return isSameDateWithTodayJapanTime(channel.date);
       });
     } else if (args.mode === 'specifiedChannels') {
+      // This mode is basically test mode. so it should bypass date check.
       targetChannels = channels
       .filter((channel) => args.channelIds.includes(channel.channelId))
-      .filter((channel) => {
-        return isSameDateWithTodayJapanTime(channel.date);
-      });
     } else {
       return {
         success: false,
@@ -122,8 +123,10 @@ export const notify = async (args: NotifyArgs): Promise<NotifyResult> => {
       });
     }));
 
-    const outdatedChannels = channels.filter((c) => isSameOrBeforeTodayJapanTime(c.date));
-    await initializeNextWeekSlots(outdatedChannels.map((c) => c.channelId));
+    if (args.updateSlot) {
+      const outdatedChannels = channels.filter((c) => isSameOrBeforeTodayJapanTime(c.date));
+      await initializeNextWeekSlots(outdatedChannels.map((c) => c.channelId));
+    }
     
     const failedChannels = results.map((result) => {
       if (result.ok) {

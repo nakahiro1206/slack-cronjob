@@ -5,6 +5,8 @@ import {
     addChannel as addChannelFirebase,
     registerUsers as registerUsersFirebase,
     removeUsers as removeUsersFirebase,
+    updateChannel as updateChannelFirebase,
+    deleteChannel as deleteChannelFirebase
 } from '@/lib/firebase/channel';
 import { dayEnum } from '@/models/channel';
 
@@ -50,6 +52,64 @@ export const channelRouter = router({
         }
       );
     }),
+
+  // update Channe;
+  update: publicProcedure
+    .input(z.object({
+      channelId: z.string().min(1),
+      channelName: z.string().min(1),
+      day: dayEnum,
+    }))
+    .mutation(async ({ input }) => {
+      const updateChannelResult = await updateChannelFirebase(input.channelId, {
+        channelName: input.channelName,
+        day: input.day,
+      });
+      return updateChannelResult.match<{
+        success: boolean;
+        error?: string;
+      }>(
+        () => {
+          return {
+            success: true,
+          };
+        },
+        (error) => {
+          console.error('Failed to update channel:', error);
+          return {
+            success: false,
+            error: error.message,
+          };
+        }
+      );
+    }),
+
+  // delete Channel
+  delete: publicProcedure
+    .input(z.object({
+      channelId: z.string().min(1),
+    }))
+    .mutation(async ({ input }) => {
+      const deleteChannelResult = await deleteChannelFirebase(input.channelId);
+      return deleteChannelResult.match<{
+        success: boolean;
+        error?: string;
+      }>(
+        () => {
+          return {
+            success: true,
+          };
+        },
+        (error) => {
+          console.error('Failed to delete channel:', error);
+          return {
+            success: false,
+            error: error.message,
+          };
+        }
+      );
+    }),
+
 
   // Register users to a channel
   registerUsers: publicProcedure

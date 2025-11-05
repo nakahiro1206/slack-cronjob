@@ -10,14 +10,15 @@ export const cronjobRouter = router({
     }),
 
   // Send notifications
-  notify: publicProcedure
+  testNotify: publicProcedure
     .input(z.object({
       channelIds: z.array(z.string()).optional(),
     }))
     .mutation(async ({ input }) => {
       const notifyResult = await notifyService({
         mode: 'specifiedChannels',
-        channelIds: input.channelIds || []
+        channelIds: input.channelIds || [],
+        updateSlot: false, //  In test mode, do not update slots
       });
       return {
         success: notifyResult.success,

@@ -30,7 +30,7 @@ export const UpcomingCardList: FC<Props> = ({ upcomingSlots: channels, users, re
     return (
         <Card className="p-4">
             <div className="flex items-center justify-between mb-2">
-                <div className="text-xl font-semibold">Channels</div>
+                <div className="text-xl font-semibold">Upcoming 1on1s within a week</div>
                 <Button variant="destructive" onClick={overrideUpcomingSlots} disabled={loadingInitializeUpcomingSlotsMutation}>
                     {loadingInitializeUpcomingSlotsMutation ? <Spinner /> : 'Force Reset'}
                 </Button>

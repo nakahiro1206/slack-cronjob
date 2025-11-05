@@ -1,7 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import { CoreMessage, generateText, tool } from "ai";
 import { z } from "zod";
-// import { exa } from "./utils";
 
 export const generateResponse = async (
   messages: CoreMessage[],

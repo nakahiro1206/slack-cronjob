@@ -53,15 +53,15 @@ export const addChannel = async (channel: Channel): Promise<Result<void, Error>>
     }
 }
 
-export const updateChannel = async (channel: Channel): Promise<Result<void, Error>> => {
+export const updateChannel = async (channelId: string, fields: Pick<Channel, "channelName" | "day">): Promise<Result<void, Error>> => {
     try {
         const channelsRef = collection(db, 'channels');
-        const docRef = doc(channelsRef, channel.channelId);
+        const docRef = doc(channelsRef, channelId);
         const docSnap = await getDoc(docRef);
         if (!docSnap.exists()) {
             return Err(new Error('Channel not found'));
         }
-        await updateDoc(docRef, channel);
+        await updateDoc(docRef, fields);
         return Ok(undefined);
     } catch (error) {
         return Err<void, Error>(error as Error);

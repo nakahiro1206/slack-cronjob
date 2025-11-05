@@ -73,10 +73,14 @@ export const MainInternal = () => {
 
     <TabsContent value="users">
       <>
-          <UserCard users={users.map((user) => ({
-            userId: user.id,
-            userName: user.name,
-              })) || []} openUserDialog={openUserDialog} />
+          <UserCard
+            users={users.map((user) => ({
+              userId: user.id,
+              userName: user.name,
+            })) || []}
+            openUserDialog={openUserDialog}
+            refetchUsers={refetchUsers}
+          />
           {/* User Dialog */}
           <UserDialog
               isOpen={isUserDialogOpen}

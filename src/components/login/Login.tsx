@@ -47,7 +47,7 @@ export const Login = ({ children }: { children: React.ReactNode }) => {
                     <p className="text-sm text-gray-500">
                         Please enter your email to login.
                     </p>
-                    <Input type="email" ref={emailRef} placeholder="Email" />
+                    <Input type="email" ref={emailRef} placeholder="Email" autoComplete="on" name="email"/>
                     <Button type="submit" disabled={isLoginPending}>
                         {isLoginPending ? <Spinner /> : "Login"}
                     </Button>

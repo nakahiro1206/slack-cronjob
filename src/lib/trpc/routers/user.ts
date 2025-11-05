@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { router, publicProcedure } from '../server';
-import { getUsers as getUsersFirebase, addUser as addUserFirebase } from '@/lib/firebase/user';
+import { getUsers as getUsersFirebase, addUser as addUserFirebase,
+  updateUser as updateUserFirebase,
+  deleteUser as deleteUserFirebase
+ } from '@/lib/firebase/user';
 
 export const userRouter = router({
   // Get all users
@@ -40,6 +43,58 @@ export const userRouter = router({
         },
         (error) => {
           console.error('Failed to add user:', error);
+          return {
+            success: false,
+          };
+        }
+      );
+    }),
+
+  // update User
+  update: publicProcedure
+    .input(z.object({
+      id: z.string(),
+      name: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const updateUserResult = await updateUserFirebase({
+        userId: input.id,
+        userName: input.name,
+      });
+      return updateUserResult.match<{
+        success: boolean;
+      }>(
+        () => {
+          return {
+            success: true,
+          };
+        },
+        (error) => {
+          console.error('Failed to update user:', error);
+          return {
+            success: false,
+          };
+        }
+      );
+    }),
+
+    // delete User
+    delete: publicProcedure
+    .input(z.object({
+      id: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const deleteUserResult = await deleteUserFirebase(input.id);
+      return deleteUserResult.match<{
+        success: boolean;
+      }>(
+        () => {
+          return {
+            success: true,
+          };
+        },
+        (error) => {
+          console.error('Failed to delete user:', error);
           return {
             success: false,
           };

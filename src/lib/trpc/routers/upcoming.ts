@@ -6,6 +6,7 @@ import {
   removeUsers,
   registerUsers,
   changeData,
+  deleteUpcomingSlot
 } from '@/lib/firebase/upcoming';
 
 export const upcomingRouter = router({
@@ -33,6 +34,31 @@ export const upcomingRouter = router({
         },
         (error) => {
           console.error('Failed to initialize upcoming slots:', error);
+          return {
+            success: false,
+            error: error.message,
+          };
+        }
+      );
+    }),
+  
+    delete: publicProcedure
+    .input(z.object({
+      channelId: z.string().min(1),
+    }))
+    .mutation(async ({ input }) => {
+      const deleteUpcomingSlotResult = await deleteUpcomingSlot(input.channelId);
+      return deleteUpcomingSlotResult.match<{
+        success: boolean;
+        error?: string;
+      }>(
+        () => {
+          return {
+            success: true,
+          };
+        },
+        (error) => {
+          console.error('Failed to delete upcoming slot:', error);
           return {
             success: false,
             error: error.message,

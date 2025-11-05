@@ -1,6 +1,6 @@
 import { AppMentionEvent } from "@slack/web-api";
-import { client, getThread } from "./slack-utils";
-import { generateResponse } from "./generate-response";
+import { client, getThread } from "../slack/utils";
+import { generateResponse } from "../ai-utils/generate-response";
 import { CoreMessage } from "ai";
 
 const updateStatusUtil = async (

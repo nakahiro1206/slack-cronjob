@@ -148,6 +148,7 @@ export const ChannelDialog: React.FC<ChannelDialogProps> = ({
               <SelectContent>
                 {users
                   .filter(user => !selectedUserIds.includes(user.userId))
+                  .sort((a, b) => a.userName.localeCompare(b.userName))
                   .map(user => (
                     <SelectItem key={user.userId} value={user.userId}>
                       {user.userName}

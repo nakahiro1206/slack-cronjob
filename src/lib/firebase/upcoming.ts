@@ -122,7 +122,7 @@ export const updateChannel = async (channel: Channel): Promise<Result<void, Erro
     }
 }
 
-export const deleteChannel = async (channelId: string): Promise<Result<void, Error>> => {
+export const deleteUpcomingSlot = async (channelId: string): Promise<Result<void, Error>> => {
     try {
         const channelsRef = collection(db, 'upcoming');
         const docRef = doc(channelsRef, channelId);

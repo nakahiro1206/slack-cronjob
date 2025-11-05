@@ -90,6 +90,7 @@ export const UserSelectDialogButton = ({ channelId, unregisteredUsers, refetchCh
                             <SelectContent>
                                 {unregisteredUsers
                                 .filter(user => !selectedUserIds.includes(user.userId))
+                                .sort((a, b) => a.userName.localeCompare(b.userName))
                                 .map((user) => (
                                     <SelectItem key={user.userId} value={user.userId}>{user.userName}</SelectItem>
                                 ))}

@@ -12,11 +12,7 @@ interface UserDialogProps {
   refetchUsers: () => void;
 }
 
-export const UserDialog: React.FC<UserDialogProps> = ({
-  isOpen,
-  onClose,
-  refetchUsers,
-}) => {
+const useUserDialog = (refetchUsers: () => void, onClose: () => void) => {
   const [newUserId, setNewUserId] = useState('');
   const [newUserName, setNewUserName] = useState('');
   const [userDialogError, setUserDialogError] = useState<string | null>(null);
@@ -56,6 +52,34 @@ export const UserDialog: React.FC<UserDialogProps> = ({
     setUserDialogError(null);
     onClose();
   };
+
+  return {
+    newUserId,
+    setNewUserId,
+    newUserName,
+    setNewUserName,
+    userDialogError,
+    addUserLoading,
+    handleCreateUser,
+    handleClose,
+  }
+}
+
+export const UserDialog: React.FC<UserDialogProps> = ({
+  isOpen,
+  onClose,
+  refetchUsers,
+}) => {
+  const {
+    newUserId,
+    setNewUserId,
+    newUserName,
+    setNewUserName,
+    userDialogError,
+    addUserLoading,
+    handleCreateUser,
+    handleClose,
+  } = useUserDialog(refetchUsers, onClose);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>

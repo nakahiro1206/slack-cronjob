@@ -1,10 +1,16 @@
+// Maybe this file is irrelevant for this project functionality
+
 import type {
     AssistantThreadStartedEvent,
     GenericMessageEvent,
   } from "@slack/web-api";
-  import { client, getThread, updateStatusUtil } from "./slack-utils";
-  import { generateResponse } from "./generate-response";
-import { CoreMessage } from "ai";
+  import { client, getThread, updateStatusUtil } from "./utils";
+  import { generateResponse } from "../ai-utils/generate-response";
+
+  type MessageParam = {
+    role: "user" | "assistant";
+    content: string;
+  }
   
   export async function assistantThreadMessage(
     event: AssistantThreadStartedEvent,
@@ -52,7 +58,7 @@ import { CoreMessage } from "ai";
     await updateStatus("is thinking...");
   
     const messages = await getThread(channel, thread_ts, botUserId);
-    const queries: CoreMessage[] = messages.map((m) => ({
+    const queries: MessageParam[] = messages.map((m) => ({
       role: m.role,
       content: m.text,
     }));

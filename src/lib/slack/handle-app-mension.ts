@@ -1,9 +1,11 @@
 import { AppMentionEvent } from "@slack/web-api";
-import { client, getThread, removeBotUserIdTag } from "./slack-utils";
-import { generateResponse } from "./generate-response";
-import { createSlackMessageBlocks, extractMainContent, extractTextFromBlocks, extractTopLeftContent } from "../slack/message";
-import { getJapanTimeAsObject } from "../date";
-import { CoreMessage } from "ai";
+import { client, getThread, removeBotUserIdTag } from "./utils";
+import { extractMainContent, extractTopLeftContent } from "./schema";
+import { 
+  postMessageToChannel,
+  updateMessageInChannel,
+  type MessageParam
+} from "./service-custom-message";
 
 const updateStatusInThreadUtil = async (
   initialStatus: string,
@@ -67,22 +69,15 @@ export async function handleAppMention(
   }
 
   // Ensure this is actually in a thread
-  if (!event.thread_ts) {
+  if (event.thread_ts === undefined) {
     console.log("Not in a thread. creating a mock-up message in channel");
-    // For thread mentions, we always post in the thread
-    const { hour, minute, date, day, month, year } = getJapanTimeAsObject();
-    const initialMessage = await client.chat.postMessage({
+    const queries: MessageParam[] = [{
+      role: "user",
+      content: removeBotUserIdTag(event.text, botUserId),
+    }];
+    const initialMessage = await postMessageToChannel({
       channel: event.channel,
-      // if you ommit thread_ts, the message will be posted in the channel
-      text: "mock-up message in channel",
-      blocks: createSlackMessageBlocks({
-        top: {
-          left: `*📣 Mockup 1on1 order* \n You can use this message to debug the bot.`,
-          right: `*⏰ Created at(UTC+9):*\n ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${day}, ${month} ${date}, ${year}`,
-        },
-        mainContent: `*📋 Offline Order:*\n${["some", "users", "here"].map(userId => `- <@${userId}>`).join('\n')}`,
-        bottomContent: "Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
-      }),
+      messages: queries,
     });
 
     if (!initialMessage || !initialMessage.ts)
@@ -105,24 +100,16 @@ export async function handleAppMention(
       const lastMessage = messages[messages.length - 1];
       console.log("The first message is from the bot. updating it");
       // update the first message
-      const { hour, minute, date, day, month, year } = getJapanTimeAsObject();
-      await client.chat.update({
-        channel: event.channel,
-        ts: firstMessage.ts as string,
-        text: 'updated by the bot',
-        blocks: createSlackMessageBlocks({
-          top: {
-            left: firstMessageTopLeftContent,
-            right: `*⏰ Updated at(UTC+9):*\n ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${day}, ${month} ${date}, ${year}`,
-          },
-          mainContent: "is updating...",
-          bottomContent: "Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
-        }),
+      await updateMessageInChannel({
+        channel, 
+        title: firstMessageTopLeftContent, 
+        timestamp: firstMessage.ts as string,
+        messages: undefined, // show loading state
       });
 
       console.log("lastMessage", lastMessage);
 
-      const queries: CoreMessage[] = [{
+      const queries: MessageParam[] = [{
         role: "assistant",
         content: firstMessageMainContent,
       }, {
@@ -131,21 +118,12 @@ export async function handleAppMention(
       }]
 
       console.log("queries", queries);
-
-      const result = await generateResponse(queries, () => {}); // updateMessage);
-
-      await client.chat.update({
-        channel: event.channel,
-        ts: firstMessage.ts as string,
-        text: "updated by the bot",
-        blocks: createSlackMessageBlocks({
-          top: {
-            left: firstMessageTopLeftContent,
-            right: `*⏰ Updated at(UTC+9):*\n ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${day}, ${month} ${date}, ${year}`,
-          },
-          mainContent: result,
-          bottomContent: "Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
-        }),
+      // update the message with the LLM's response
+      await updateMessageInChannel({
+        channel, 
+        title: firstMessageTopLeftContent, 
+        timestamp: firstMessage.ts as string,
+        messages: queries,
       });
       return;
     }

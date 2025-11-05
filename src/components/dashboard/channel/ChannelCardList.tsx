@@ -29,6 +29,7 @@ export const ChannelCardList: FC<Props> = ({ channels, users, openChannelDialog,
                 return aDayNumber - bDayNumber;
             }).map((channel) => (
                 <ChannelCard 
+                    key={channel.channelId}
                     channel={channel}
                     users={users}
                     refetchChannels={refetchChannels}
