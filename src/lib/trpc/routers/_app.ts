@@ -1,18 +1,18 @@
-import { router } from '../server';
-import { channelRouter } from './channel';
-import { cronjobRouter } from './cronjob';
-import { simpleRouter } from './simple';
-import { userRouter } from './user';
-import { authRouter } from './auth';
-import { upcomingRouter } from './upcoming';
+import { router } from "../server";
+import { authRouter } from "./auth";
+import { channelRouter } from "./channel";
+import { cronjobRouter } from "./cronjob";
+import { simpleRouter } from "./simple";
+import { upcomingRouter } from "./upcoming";
+import { userRouter } from "./user";
 
 export const appRouter = router({
-  simple: simpleRouter,
-  user: userRouter,
-  channel: channelRouter,
-  cronjob: cronjobRouter,
-  auth: authRouter,
-  upcoming: upcomingRouter,
+	simple: simpleRouter,
+	user: userRouter,
+	channel: channelRouter,
+	cronjob: cronjobRouter,
+	auth: authRouter,
+	upcoming: upcomingRouter,
 });
 
-export type AppRouter = typeof appRouter; 
+export type AppRouter = typeof appRouter;

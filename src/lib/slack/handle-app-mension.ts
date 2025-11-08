@@ -1,135 +1,144 @@
-import { AppMentionEvent } from "@slack/web-api";
-import { client, getThread, removeBotUserIdTag } from "./utils";
+import type { AppMentionEvent } from "@slack/web-api";
 import { extractMainContent, extractTopLeftContent } from "./schema";
-import { 
-  postMessageToChannel,
-  updateMessageInChannel,
-  type MessageParam
+import {
+	type MessageParam,
+	postMessageToChannel,
+	updateMessageInChannel,
 } from "./service-custom-message";
+import { client, getThread, removeBotUserIdTag } from "./utils";
 
 const updateStatusInThreadUtil = async (
-  initialStatus: string,
-  event: AppMentionEvent,
+	initialStatus: string,
+	event: AppMentionEvent,
 ) => {
-  // For thread mentions, we always post in the thread
-  const initialMessage = await client.chat.postMessage({
-    channel: event.channel,
-    // if you ommit thread_ts, the message will be posted in the channel
-    thread_ts: event.thread_ts ?? event.ts,
-    text: initialStatus,
-  });
+	// For thread mentions, we always post in the thread
+	const initialMessage = await client.chat.postMessage({
+		channel: event.channel,
+		// if you ommit thread_ts, the message will be posted in the channel
+		thread_ts: event.thread_ts ?? event.ts,
+		text: initialStatus,
+	});
 
-  if (!initialMessage || !initialMessage.ts)
-    throw new Error("Failed to post initial message");
+	if (!initialMessage || !initialMessage.ts)
+		throw new Error("Failed to post initial message");
 
-  const updateMessage = async (status: string) => {
-    await client.chat.update({
-      channel: event.channel,
-      ts: initialMessage.ts as string,
-      text: status,
-    });
-  };
-  return updateMessage;
+	const updateMessage = async (status: string) => {
+		await client.chat.update({
+			channel: event.channel,
+			ts: initialMessage.ts as string,
+			text: status,
+		});
+	};
+	return updateMessage;
 };
 
 const updateStatusInChannelUtil = async (
-  initialStatus: string,
-  event: AppMentionEvent,
+	initialStatus: string,
+	event: AppMentionEvent,
 ) => {
-  // For thread mentions, we always post in the thread
-  const initialMessage = await client.chat.postMessage({
-    channel: event.channel,
-    // if you ommit thread_ts, the message will be posted in the channel
-    text: initialStatus,
-  });
+	// For thread mentions, we always post in the thread
+	const initialMessage = await client.chat.postMessage({
+		channel: event.channel,
+		// if you ommit thread_ts, the message will be posted in the channel
+		text: initialStatus,
+	});
 
-  if (!initialMessage || !initialMessage.ts)
-    throw new Error("Failed to post initial message");
+	if (!initialMessage || !initialMessage.ts)
+		throw new Error("Failed to post initial message");
 
-  const updateMessage = async (status: string) => {
-    await client.chat.update({
-      channel: event.channel,
-      ts: initialMessage.ts as string,
-      text: status,
-    });
-  };
-  return updateMessage;
+	const updateMessage = async (status: string) => {
+		await client.chat.update({
+			channel: event.channel,
+			ts: initialMessage.ts as string,
+			text: status,
+		});
+	};
+	return updateMessage;
 };
 
 export async function handleAppMention(
-  event: AppMentionEvent,
-  botUserId: string,
+	event: AppMentionEvent,
+	botUserId: string,
 ) {
-  console.log("Handling app mention in thread");
-  
-  // Skip if this is a bot message
-  if (event.bot_id || event.bot_id === botUserId || event.bot_profile) {
-    console.log("Skipping bot message");
-    return;
-  }
+	console.log("Handling app mention in thread");
 
-  // Ensure this is actually in a thread
-  if (event.thread_ts === undefined) {
-    console.log("Not in a thread. creating a mock-up message in channel");
-    const queries: MessageParam[] = [{
-      role: "user",
-      content: removeBotUserIdTag(event.text, botUserId),
-    }];
-    const initialMessage = await postMessageToChannel({
-      channel: event.channel,
-      messages: queries,
-    });
+	// Skip if this is a bot message
+	if (event.bot_id || event.bot_id === botUserId || event.bot_profile) {
+		console.log("Skipping bot message");
+		return;
+	}
 
-    if (!initialMessage || !initialMessage.ts)
-      throw new Error("Failed to post initial message");
-    return;
-  }
+	// Ensure this is actually in a thread
+	if (event.thread_ts === undefined) {
+		console.log("Not in a thread. creating a mock-up message in channel");
+		const queries: MessageParam[] = [
+			{
+				role: "user",
+				content: removeBotUserIdTag(event.text, botUserId),
+			},
+		];
+		const initialMessage = await postMessageToChannel({
+			channel: event.channel,
+			messages: queries,
+		});
 
-  const { thread_ts, channel } = event;
-  // const updateMessage = await updateStatusInThreadUtil("is thinking...", event);
+		if (!initialMessage || !initialMessage.ts)
+			throw new Error("Failed to post initial message");
+		return;
+	}
 
-  try {
-    // Get the full thread context
-    const messages = await getThread(channel, thread_ts, botUserId);
-    // console.log("messages", messages);
-    console.log("bot user id", botUserId);
-    if (messages.length > 1) {
-      const firstMessage = messages[0];
-      const firstMessageTopLeftContent = extractTopLeftContent(firstMessage.blocks || [])
-      const firstMessageMainContent = extractMainContent(firstMessage.blocks || [])
-      const lastMessage = messages[messages.length - 1];
-      console.log("The first message is from the bot. updating it");
-      // update the first message
-      await updateMessageInChannel({
-        channel, 
-        title: firstMessageTopLeftContent, 
-        timestamp: firstMessage.ts as string,
-        messages: undefined, // show loading state
-      });
+	const { thread_ts, channel } = event;
+	// const updateMessage = await updateStatusInThreadUtil("is thinking...", event);
 
-      console.log("lastMessage", lastMessage);
+	try {
+		// Get the full thread context
+		const messages = await getThread(channel, thread_ts, botUserId);
+		// console.log("messages", messages);
+		console.log("bot user id", botUserId);
+		if (messages.length > 1) {
+			const firstMessage = messages[0];
+			const firstMessageTopLeftContent = extractTopLeftContent(
+				firstMessage.blocks || [],
+			);
+			const firstMessageMainContent = extractMainContent(
+				firstMessage.blocks || [],
+			);
+			const lastMessage = messages[messages.length - 1];
+			console.log("The first message is from the bot. updating it");
+			// update the first message
+			await updateMessageInChannel({
+				channel,
+				title: firstMessageTopLeftContent,
+				timestamp: firstMessage.ts as string,
+				messages: undefined, // show loading state
+			});
 
-      const queries: MessageParam[] = [{
-        role: "assistant",
-        content: firstMessageMainContent,
-      }, {
-        role: "user",
-        content: removeBotUserIdTag(lastMessage.text, botUserId),
-      }]
+			console.log("lastMessage", lastMessage);
 
-      console.log("queries", queries);
-      // update the message with the LLM's response
-      await updateMessageInChannel({
-        channel, 
-        title: firstMessageTopLeftContent, 
-        timestamp: firstMessage.ts as string,
-        messages: queries,
-      });
-      return;
-    }
-    
-    console.log("Successfully handled app mention in thread");
-  } catch (error) {
-    console.error("Error handling app mention in thread:", error);
-  }
-} 
+			const queries: MessageParam[] = [
+				{
+					role: "assistant",
+					content: firstMessageMainContent,
+				},
+				{
+					role: "user",
+					content: removeBotUserIdTag(lastMessage.text, botUserId),
+				},
+			];
+
+			console.log("queries", queries);
+			// update the message with the LLM's response
+			await updateMessageInChannel({
+				channel,
+				title: firstMessageTopLeftContent,
+				timestamp: firstMessage.ts as string,
+				messages: queries,
+			});
+			return;
+		}
+
+		console.log("Successfully handled app mention in thread");
+	} catch (error) {
+		console.error("Error handling app mention in thread:", error);
+	}
+}
