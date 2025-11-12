@@ -1,4 +1,3 @@
-import { openai } from "@ai-sdk/openai";
 import { type ModelMessage, generateObject } from "ai";
 import { z } from "zod";
 
@@ -14,7 +13,7 @@ export const generateResponse = async (
 	updateStatus?: (status: string) => void,
 ): Promise<GenerateResponseReturn> => {
 	const { object } = await generateObject({
-		model: openai("gpt-4o"),
+		model: 'openai/gpt-4.1',
 		schema: GenerateResponseReturnSchema,
 		system: `You are a Slack bot assistant.
     - Re-organize the order based on the intial order and given user's request.

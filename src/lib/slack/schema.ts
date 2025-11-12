@@ -45,18 +45,26 @@ const linkButtonSchema = z.object({
 				"type": z.literal("mrkdwn"),
 				"text": z.string(),
 			}),
-			// "accessory": z.object({
-			// 	"type": z.literal("button"),
-				// "text": {
-				// 	"type": "plain_text",
-				// 	"text": "Click Me",
-				// 	"emoji": true
-				// },
-				// "value": "click_me_123",
-			// 	"url": z.string().url(),
-			// 	"action_id": z.literal("button-action"),
-			// }),
+			"accessory": z.object({
+				"type": z.literal("button"),
+				"text": z.object({
+					"type": z.literal("plain_text"),
+					"text": z.string(),
+					"emoji": z.literal(true),
+				}),
+				"value": z.string(),
+				"url": z.string().url(),
+				"action_id": z.literal("button-action"),
+			}),
 		});
+
+export type LinkButtonBlock = z.infer<typeof linkButtonSchema>;
+
+export const dividerBlock = z.object({
+			"type": z.literal("divider"),
+		});
+
+export type DividerBlock = z.infer<typeof dividerBlock>;
 
 // get user ids
 export const extractMainContent = (blocks: PurpleBlock[]): string[] => {
@@ -64,11 +72,12 @@ export const extractMainContent = (blocks: PurpleBlock[]): string[] => {
 		return [];
 	}
 	const mainContentBlock = blocks.slice(1, -1); // remove first and last block
-	const result = linkButtonSchema.array().safeParse(mainContentBlock);
+	const result = linkButtonSchema.or(dividerBlock).array().safeParse(mainContentBlock);
 	if (!result.success) {
 		return [];
 	}
 	return result.data
+		.filter((block) => block.type === "section") // remove divider blocks
 		.map((block => block.text.text))
 		.filter((text): text is string => text !== undefined);
 };
@@ -140,11 +149,11 @@ export const createSlackMessageBlocks = (props: {
 				"emoji": true
 			}
 		}] : [];
-	const onlineSection = props.mainContent.online.map((userId) => {
+	const onlineSection = props.mainContent.online.reduce<Array<LinkButtonBlock | DividerBlock>>((acc, userId) => {
 		const userMention = `<@${userId}>`;
 		const user = props.users.find((u) => u.userId === userId);
 		const huddleUrl = user?.huddleUrl
-		return {
+		acc.push({
 			"type": "section",
 			"text": {
 				"type": "mrkdwn",
@@ -161,8 +170,12 @@ export const createSlackMessageBlocks = (props: {
 				"url": huddleUrl || "", 
 				"action_id": "button-action"
 			}
-		}
-	});
+		});
+		acc.push({
+			"type": "divider"
+		})
+		return acc;
+	}, []);
 	const offlineSectionHeader = props.mainContent.offline.length > 0 ? [{
 		"type": "header",
 		"text": {
@@ -171,11 +184,11 @@ export const createSlackMessageBlocks = (props: {
 			"emoji": true
 		}
 	}] : [];
-	const offlineSection = props.mainContent.offline.map((userId) => {
+	const offlineSection = props.mainContent.offline.reduce<Array<LinkButtonBlock | DividerBlock>>((acc, userId) => {
 		const userMention = `<@${userId}>`;
 		const user = props.users.find((u) => u.userId === userId);
 		const huddleUrl = user?.huddleUrl
-		return {
+		acc.push({
 			"type": "section",
 			"text": {
 				"type": "mrkdwn",
@@ -185,15 +198,19 @@ export const createSlackMessageBlocks = (props: {
 				"type": "button",
 				"text": {
 					"type": "plain_text",
-					"text": "Click Me",
+					"text": "Join Huddle",
 					"emoji": true
 				},
 				"value": "click_me_123",
-				"url": huddleUrl || undefined,
+				"url": huddleUrl || "",
 				"action_id": "button-action"
 			}
-		}
-	})
+		})
+		acc.push({
+			"type": "divider"
+		})
+		return acc;
+	}, [])
 	const footer = [{
 			type: "section",
 			text: {
