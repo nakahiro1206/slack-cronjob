@@ -1,6 +1,6 @@
 import { PlusIcon } from "@heroicons/react/24/solid";
 import { CheckIcon, EllipsisVerticalIcon, XIcon } from "lucide-react";
-import React, { type FC } from "react";
+import React, { useEffect, type FC } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -31,6 +31,7 @@ const useUserCard = (refetchUsers: () => void) => {
 		null,
 	);
 	const editingUserNameRef = React.useRef<HTMLInputElement>(null);
+	const editingHuddleUrlRef = React.useRef<HTMLInputElement>(null);
 	const startEditUser = (index: number) => {
 		setEditingUserIndex(index);
 	};
@@ -40,7 +41,7 @@ const useUserCard = (refetchUsers: () => void) => {
 	const { mutate: deleteUserMutation, isPending: deleteUserLoading } =
 		trpc.user.delete.useMutation();
 
-	const handleUpdateUser = async (input: { id: string; name: string }) => {
+	const handleUpdateUser = async (input: { id: string; name: string, url: string }) => {
 		updateUserMutation(input, {
 			onSuccess: (result) => {
 				if (result.success) {
@@ -79,6 +80,7 @@ const useUserCard = (refetchUsers: () => void) => {
 		editingUserIndex,
 		setEditingUserIndex,
 		editingUserNameRef,
+		editingHuddleUrlRef,
 		startEditUser,
 		handleUpdateUser,
 		handleDeleteUser,
@@ -94,6 +96,7 @@ export const UserCard: FC<Props> = ({
 		editingUserIndex,
 		setEditingUserIndex,
 		editingUserNameRef,
+		editingHuddleUrlRef,
 		startEditUser,
 		handleUpdateUser,
 		handleDeleteUser,
@@ -149,6 +152,7 @@ export const UserCard: FC<Props> = ({
 					<TableRow>
 						<TableHead>ID</TableHead>
 						<TableHead>Name</TableHead>
+						<TableHead>Huddle URL</TableHead>
 						<TableHead>Actions</TableHead>
 					</TableRow>
 				</TableHeader>
@@ -169,14 +173,26 @@ export const UserCard: FC<Props> = ({
 							</TableCell>
 							<TableCell>
 								{editingUserIndex === userIndex ? (
+									<input
+										ref={editingHuddleUrlRef}
+										className="border rounded px-2 py-1 w-full"
+										defaultValue={user.huddleUrl || ""}
+									/>
+								) : (
+									user.huddleUrl || "No Huddle URL"
+								)}
+							</TableCell>
+							<TableCell>
+								{editingUserIndex === userIndex ? (
 									<div className="flex space-x-2">
 										<Button
 											variant="ghost"
 											className="text-green-600"
 											onClick={() => {
-												if (editingUserNameRef.current) {
+												if (editingUserNameRef.current && editingHuddleUrlRef.current) {
 													const newName = editingUserNameRef.current.value;
-													handleUpdateUser({ id: user.userId, name: newName });
+													const newUrl = editingHuddleUrlRef.current.value;
+													handleUpdateUser({ id: user.userId, name: newName, url: newUrl });
 												}
 												setEditingUserIndex(null);
 											}}

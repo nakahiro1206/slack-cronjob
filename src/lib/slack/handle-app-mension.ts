@@ -118,7 +118,7 @@ export async function handleAppMention(
 			const queries: MessageParam[] = [
 				{
 					role: "assistant",
-					content: firstMessageMainContent,
+					content: "User IDs: "+ JSON.stringify(firstMessageMainContent),
 				},
 				{
 					role: "user",

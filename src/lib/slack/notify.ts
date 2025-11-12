@@ -11,6 +11,8 @@ import {
 } from "@/lib/firebase/upcoming";
 import type { Channel } from "@/models/channel";
 import { createSlackMessageBlocks } from "./schema";
+import { getUsers } from "../firebase/user";
+import { User } from "@/models/user";
 
 type NotifyResult = {
 	success: boolean;
@@ -27,6 +29,7 @@ async function postMessage({
 	date,
 	year,
 	rng,
+	users,
 }: {
 	slack: WebClient;
 	channel: Channel;
@@ -37,6 +40,7 @@ async function postMessage({
 	date: number;
 	year: number;
 	rng: Random;
+	users: User[];
 }): Promise<{
 	channelName: string;
 	ok: boolean;
@@ -44,9 +48,6 @@ async function postMessage({
 }> {
 	// Create user mentions for the channel members
 	const shuffledUserIds = channel.userIds.sort(() => rng.float(0, 1) - 0.5);
-	const userMentions = shuffledUserIds
-		.map((userId) => `- <@${userId}>`)
-		.join("\n");
 
 	const result = await slack.chat.postMessage({
 		channel: channel.channelId,
@@ -57,9 +58,13 @@ async function postMessage({
 				left: `*📣 1on1 order for ${channel.channelName}* \n This order is for the meeting on ${day}, ${month} ${date}, ${year}.`,
 				right: `*⏰ Created at (UTC+9):*\n ${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} ${day}, ${month} ${date}, ${year}`,
 			},
-			mainContent: `*📋 Offline Order:*\n${userMentions}`,
+			mainContent: {
+				offline: shuffledUserIds,
+				online: [],
+			},
 			bottomContent:
 				"Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
+			users: users,
 		}),
 	});
 	return {
@@ -89,6 +94,15 @@ export const notify = async (args: NotifyArgs): Promise<NotifyResult> => {
 	const { hour, minute, date, day, month, year } = getJapanTimeAsObject();
 
 	const rng = new Random(`${new Date().toISOString()}`);
+
+	const usersResult = await getUsers();
+	const users = usersResult.match(
+		(users) => users,
+		(error) => {
+			console.error("Failed to get users:", error);
+			return [];
+		},
+	);
 
 	try {
 		// Get all available channels
@@ -134,6 +148,7 @@ export const notify = async (args: NotifyArgs): Promise<NotifyResult> => {
 					date,
 					year,
 					rng,
+					users
 				});
 			}),
 		);

@@ -67,14 +67,14 @@ export async function handleNewAssistantMessage(
 	await client.chat.postMessage({
 		channel: channel,
 		thread_ts: thread_ts,
-		text: result,
+		text: JSON.stringify(result),
 		unfurl_links: false,
 		blocks: [
 			{
 				type: "section",
 				text: {
 					type: "mrkdwn",
-					text: result,
+					text: JSON.stringify(result),
 				},
 			},
 		],

@@ -170,8 +170,7 @@ export const ChannelCard: FC<Props> = ({ channel, users, refetchChannels }) => {
 				<Table>
 					<TableHeader>
 						<TableRow>
-							<TableHead className="w-1/3">ID</TableHead>
-							<TableHead className="w-1/3">Name</TableHead>
+							<TableHead className="w-2/3">Name</TableHead>
 							<TableHead className="w-1/3">Actions</TableHead>
 						</TableRow>
 					</TableHeader>
@@ -180,7 +179,6 @@ export const ChannelCard: FC<Props> = ({ channel, users, refetchChannels }) => {
 							const user = users?.find((u) => u.userId === userId);
 							return (
 								<TableRow key={userId}>
-									<TableCell>{userId}</TableCell>
 									<TableCell>
 										{user ? (
 											<div className="flex items-center gap-2">

@@ -6,6 +6,8 @@ import type { User } from "@/models/user";
 import { Button } from "../../ui/button";
 import { Card } from "../../ui/card";
 import { ChannelCard } from "./ChannelCard";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { useMobile } from "@/lib/useMobile";
 
 type Props = {
 	channels: Channel[] | undefined;
@@ -19,6 +21,7 @@ export const ChannelCardList: FC<Props> = ({
 	openChannelDialog,
 	refetchChannels,
 }) => {
+	const {isMobile} = useMobile();
 	return (
 		<Card className="p-4">
 			<div className="flex items-center justify-between mb-2">
@@ -27,7 +30,8 @@ export const ChannelCardList: FC<Props> = ({
 					<PlusIcon className="h-4 w-4" /> Create Channel
 				</Button>
 			</div>
-			<div className="grid grid-cols-2 gap-4">
+			{isMobile === false && (
+				<div className="grid grid-cols-2 gap-4">
 				{channels
 					?.sort((a, b) => {
 						const aDayNumber = dayToNumber(a.day);
@@ -42,7 +46,30 @@ export const ChannelCardList: FC<Props> = ({
 							refetchChannels={refetchChannels}
 						/>
 					))}
-			</div>
+			</div>)}
+			{isMobile && (
+				<Carousel>
+				<CarouselContent>
+				{channels
+					?.sort((a, b) => {
+						const aDayNumber = dayToNumber(a.day);
+						const bDayNumber = dayToNumber(b.day);
+						return aDayNumber - bDayNumber;
+					})
+					.map((channel) => (
+						<CarouselItem key={channel.channelId}>
+						<ChannelCard
+							key={channel.channelId}
+							channel={channel}
+							users={users}
+							refetchChannels={refetchChannels}
+						/>
+						</CarouselItem>
+					))}
+				</CarouselContent>
+				<CarouselPrevious/>
+				<CarouselNext/>
+				</Carousel>)}
 		</Card>
 	);
 };

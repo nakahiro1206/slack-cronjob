@@ -16,6 +16,7 @@ export const userRouter = router({
 				users.map((user) => ({
 					id: user.userId,
 					name: user.userName,
+					huddleUrl: user.huddleUrl,
 				})),
 			(error) => {
 				console.error("Failed to get users:", error);
@@ -60,12 +61,14 @@ export const userRouter = router({
 			z.object({
 				id: z.string(),
 				name: z.string(),
+				url: z.string(),
 			}),
 		)
 		.mutation(async ({ input }) => {
 			const updateUserResult = await updateUserFirebase({
 				userId: input.id,
 				userName: input.name,
+				huddleUrl: input.url,
 			});
 			return updateUserResult.match<{
 				success: boolean;

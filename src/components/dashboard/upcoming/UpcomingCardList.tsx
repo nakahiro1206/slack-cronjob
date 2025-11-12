@@ -7,6 +7,8 @@ import { Button } from "../../ui/button";
 import { Card } from "../../ui/card";
 import { Spinner } from "../../ui/spinner";
 import { UpcomingCard } from "./UpcomingCard";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { useMobile } from "@/lib/useMobile";
 
 type Props = {
 	upcomingSlots: UpcomingSlot[] | undefined;
@@ -18,6 +20,7 @@ export const UpcomingCardList: FC<Props> = ({
 	users,
 	refetchUpcomingSlots: refetchChannels,
 }) => {
+	const {isMobile} = useMobile();
 	const {
 		mutate: initializeUpcomingSlotsMutation,
 		isPending: loadingInitializeUpcomingSlotsMutation,
@@ -47,20 +50,43 @@ export const UpcomingCardList: FC<Props> = ({
 					{loadingInitializeUpcomingSlotsMutation ? <Spinner /> : "Force Reset"}
 				</Button>
 			</div>
-			<div className="grid grid-cols-2 gap-4">
-				{channels
-					?.sort((a, b) => {
-						return a.date.localeCompare(b.date);
-					})
-					.map((channel) => (
-						<UpcomingCard
-							key={channel.channelId}
-							channel={channel}
-							refetchChannels={refetchChannels}
-							users={users}
-						/>
-					))}
-			</div>
+			{isMobile === false && (
+				<div className="grid grid-cols-2 gap-4">
+					{channels
+						?.sort((a, b) => {
+							return a.date.localeCompare(b.date);
+						})
+						.map((channel) => (
+							<UpcomingCard
+								key={channel.channelId}
+								channel={channel}
+								refetchChannels={refetchChannels}
+								users={users}
+							/>
+						))}
+				</div>
+			)}
+			{isMobile && (
+				<Carousel>
+					<CarouselContent>
+						{channels
+							?.sort((a, b) => {
+								return a.date.localeCompare(b.date);
+							})
+							.map((channel) => (
+								<CarouselItem key={channel.channelId} className="w-full px-2">
+									<UpcomingCard
+										channel={channel}
+										refetchChannels={refetchChannels}
+										users={users}
+									/>
+								</CarouselItem>
+							))}
+					</CarouselContent>
+					<CarouselPrevious/>
+					<CarouselNext/>
+				</Carousel>
+			)}
 		</Card>
 	);
 };

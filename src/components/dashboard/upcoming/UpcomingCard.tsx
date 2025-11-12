@@ -32,6 +32,7 @@ import {
 } from "../../ui/table";
 import { UserSelectDialogButton } from "./AddUserDialogButton";
 import { DeleteUpcomingSlotButton } from "./CancelUpcomingDialogButton";
+import { useMobile } from "@/lib/useMobile";
 
 type UpcomingCardProps = {
 	channel: UpcomingSlot;
@@ -163,11 +164,13 @@ export const UpcomingCard = ({
 		);
 	};
 
+	const { isMobile } = useMobile();
+
 	const { day, date, month, year } = getJapanTimeAsObject(channel.date);
 	return (
 		<>
 			<Card key={channel.channelId} className="p-4">
-				<div className="w-full flex justify-between">
+				{isMobile === false && ( <div className="w-full flex justify-between">
 					<div className="flex flex-col gap-2">
 						<div className="flex flex-row items-center gap-2">
 							<div className="text-xl font-semibold">{channel.channelName}</div>
@@ -227,12 +230,72 @@ export const UpcomingCard = ({
 							</Button>
 						)}
 					</div>
-				</div>
+				</div> )}
+				{isMobile && (
+					<div className="w-full">
+						<div className="flex flex-row items-center gap-2">
+							<div className="text-xl font-semibold">{channel.channelName}</div>
+							<Badge variant="outline">{channel.day}</Badge>
+							<DeleteUpcomingSlotButton
+								onProceed={handleDeleteUpcomingSlot}
+								onCancel={() => {}}
+							/>
+						</div>
+						<div className="flex items-center gap-2">
+							<div className="text-sm text-gray-500">
+								{day} {date} {month} {year}
+							</div>
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={openDateDialog}
+								className="p-1 h-auto"
+							>
+								<PencilIcon className="h-4 w-4" />
+							</Button>
+						</div>
+					<div className="flex items-end gap-2">
+						<UserSelectDialogButton
+							channelId={channel.channelId}
+							unregisteredUsers={
+								users?.filter(
+									(user) => !channel.userIds.includes(user.userId),
+								) || []
+							}
+							refetchChannels={refetchChannels}
+						/>
+
+						{isHandlingRemoveUsers ? (
+							<div className="flex items-center gap-2 justify-end">
+								<Button
+									variant="destructive"
+									onClick={executeRemoveUsers}
+									disabled={
+										loadingRemoveUsersMutation ||
+										selectedRemoveUserIds.length === 0
+									}
+								>
+									{loadingRemoveUsersMutation ? <Spinner /> : "Execute"}
+								</Button>
+								<Button variant="outline" onClick={endHandlingRemoveUsers}>
+									Cancel
+								</Button>
+							</div>
+						) : (
+							<Button
+								variant="outline"
+								onClick={() => startHandlingRemoveUsers(channel.channelId)}
+							>
+								Remove Users
+							</Button>
+						)}
+					</div>
+				</div>)
+				}
 				<Table>
 					<TableHeader>
 						<TableRow>
-							<TableHead className="w-1/3">ID</TableHead>
-							<TableHead className="w-1/3">Name</TableHead>
+							<TableHead className="w-2/3">Name</TableHead>
 							<TableHead className="w-1/3">Actions</TableHead>
 						</TableRow>
 					</TableHeader>
@@ -241,7 +304,6 @@ export const UpcomingCard = ({
 							const user = users?.find((u) => u.userId === userId);
 							return (
 								<TableRow key={userId}>
-									<TableCell>{userId}</TableCell>
 									<TableCell>
 										{user ? (
 											<div className="flex items-center gap-2">

@@ -85,6 +85,7 @@ export const MainInternal = () => {
 							users.map((user) => ({
 								userId: user.id,
 								userName: user.name,
+								huddleUrl: user.huddleUrl,
 							})) || []
 						}
 						openUserDialog={openUserDialog}
