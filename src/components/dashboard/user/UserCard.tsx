@@ -41,7 +41,11 @@ const useUserCard = (refetchUsers: () => void) => {
 	const { mutate: deleteUserMutation, isPending: deleteUserLoading } =
 		trpc.user.delete.useMutation();
 
-	const handleUpdateUser = async (input: { id: string; name: string, url: string }) => {
+	const handleUpdateUser = async (input: {
+		id: string;
+		name: string;
+		url: string;
+	}) => {
 		updateUserMutation(input, {
 			onSuccess: (result) => {
 				if (result.success) {
@@ -189,10 +193,17 @@ export const UserCard: FC<Props> = ({
 											variant="ghost"
 											className="text-green-600"
 											onClick={() => {
-												if (editingUserNameRef.current && editingHuddleUrlRef.current) {
+												if (
+													editingUserNameRef.current &&
+													editingHuddleUrlRef.current
+												) {
 													const newName = editingUserNameRef.current.value;
 													const newUrl = editingHuddleUrlRef.current.value;
-													handleUpdateUser({ id: user.userId, name: newName, url: newUrl });
+													handleUpdateUser({
+														id: user.userId,
+														name: newName,
+														url: newUrl,
+													});
 												}
 												setEditingUserIndex(null);
 											}}

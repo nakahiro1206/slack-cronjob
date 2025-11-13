@@ -1,4 +1,7 @@
-import { generateResponse, GenerateResponseReturn } from "../ai-utils/generate-response";
+import {
+	generateResponse,
+	GenerateResponseReturn,
+} from "../../server/infrastructure/llm/llm-repository";
 import { getJapanTimeAsObject } from "../date";
 import { createSlackMessageBlocks } from "./schema";
 import { client } from "./utils";
@@ -30,7 +33,7 @@ const postMockResponseToChannel = async (channel: string) => {
 			},
 			bottomContent:
 				"Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
-			users: []
+			users: [],
 		}),
 	});
 
@@ -45,7 +48,10 @@ export const postMessageToChannel = async (input: {
 	// For thread mentions, we always post in the thread
 	const { hour, minute, date, day, month, year } = getJapanTimeAsObject();
 
-	const post = async (input: { title: string; content: {offline: string[], online: string[]} }) => {
+	const post = async (input: {
+		title: string;
+		content: { offline: string[]; online: string[] };
+	}) => {
 		const usersResult = await getUsers();
 		const users = usersResult.match(
 			(users) => users,
@@ -75,7 +81,7 @@ export const postMessageToChannel = async (input: {
 	if (messages === undefined || messages.length === 0) {
 		const initialMessage = await post({
 			title: `*📣 Mockup 1on1 order* \n You can use this message to debug the bot.`,
-			content: {offline: [], online: []}
+			content: { offline: [], online: [] },
 		});
 		return initialMessage;
 	}
@@ -123,10 +129,8 @@ export const updateMessageInChannel = async (input: {
 	};
 	if (messages === undefined || messages.length === 0) {
 		await post({
-			offline: ["updating", 
-				"order",
-			],
-			online: []
+			offline: ["updating", "order"],
+			online: [],
 		});
 		return;
 	}
