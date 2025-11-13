@@ -1,43 +1,7 @@
 import { User } from "@/models/user";
+import { UserTagsAssignment } from "@/server/domain/entities";
 import type { PurpleBlock } from "@slack/web-api/dist/response/ConversationsHistoryResponse";
 import { z } from "zod";
-// To scan the message content effectively,
-// slack bot should obey the folling message structure
-// export const SlackNotificationSchema = z.tuple([
-// 	z.object({
-// 		type: z.literal("section"),
-// 		fields: z.tuple([
-// 			// date block
-// 			z.object({
-// 				type: z.literal("mrkdwn"),
-// 				text: z.string(),
-// 			}),
-// 			// time block
-// 			z.object({
-// 				type: z.literal("mrkdwn"),
-// 				text: z.string(),
-// 			}),
-// 		]),
-// 	}),
-// 	// main content block
-// 	z.object({
-// 		type: z.literal("section"),
-// 		text: z.object({
-// 			type: z.literal("mrkdwn"),
-// 			text: z.string(),
-// 		}),
-// 	}),
-// 	// help block
-// 	z.object({
-// 		type: z.literal("section"),
-// 		text: z.object({
-// 			type: z.literal("mrkdwn"),
-// 			text: z.string(),
-// 		}),
-// 	}),
-// ]);
-
-// export type SlackNotification = z.infer<typeof SlackNotificationSchema>;
 
 const linkButtonSchema = z.object({
 	type: z.literal("section"),
@@ -66,23 +30,56 @@ export const dividerBlock = z.object({
 
 export type DividerBlock = z.infer<typeof dividerBlock>;
 
+const HeaderBlockSchema = z.object({
+	type: z.literal("header"),
+	text: z.object({
+		type: z.literal("plain_text"),
+		text: z.string(),
+		emoji: z.boolean(),
+	}),
+})
+
+export type HeaderBlock = z.infer<typeof HeaderBlockSchema>;
+
 // get user ids
-export const extractMainContent = (blocks: PurpleBlock[]): string[] => {
+export const extractMainContent = (blocks: PurpleBlock[]): UserTagsAssignment => {
 	if (blocks.length <= 2) {
-		return [];
+		return {
+			offline: [],
+			online: [],
+		};
 	}
-	const mainContentBlock = blocks.slice(1, -1); // remove first and last block
+	const mainContentBlock = blocks.slice(1, -1); // remove first and last block corresponding to header and footer
 	const result = linkButtonSchema
 		.or(dividerBlock)
+		.or(HeaderBlockSchema)
 		.array()
 		.safeParse(mainContentBlock);
 	if (!result.success) {
-		return [];
+		return {
+			offline: [],
+			online: [],
+		};
 	}
-	return result.data
-		.filter((block) => block.type === "section") // remove divider blocks
-		.map((block) => block.text.text)
-		.filter((text): text is string => text !== undefined);
+	const res: UserTagsAssignment = {
+		offline: [],
+		online: [],
+	};
+	let currentSection: "offline" | "online" = "online"; // always start with online section
+	result.data.forEach((block) => {
+		if (block.type === "header") {
+			const header = block.text.text.toLowerCase()
+			if (header.includes("offline")) {
+				currentSection = "offline";
+			} else if (header.includes("online")) {
+				currentSection = "online";
+			}
+		} else if (block.type === "section") {
+			const userMention = block.text.text;
+			res[currentSection].push(userMention);
+		}
+	});
+	return res;
 };
 
 export const headerSchema = z.object({

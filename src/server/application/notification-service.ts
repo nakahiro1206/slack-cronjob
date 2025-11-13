@@ -91,42 +91,21 @@ class NotificationService {
         threadTs: string,
         status: string,
     ) {
-        const threadMessagesResult = await this.messengerRepository.getThreadMessages(
+        const infoResult = await this.messengerRepository.extractInfoFromThreadMessages(
             channelId, threadTs
         )
-        const threadMessages = threadMessagesResult.match(
+        const info = infoResult.match(
             (res) => {
-                console.log("threadMessages", res);
+				console.log("info", res);
                 return res
             },
             (error) => {
-                console.error("Failed to get thread messages:", error);
+				console.error("Failed to extract info from thread messages:", error);
                 throw error;
             },
         );
-        if (threadMessages.length === 0) {
-            throw new Error("No messages in thread");
-        }
-        const rootMessage = threadMessages[0];
-        const lastMessage = threadMessages[threadMessages.length - 1];
-        console.log("rootMessage", rootMessage);
-        console.log("lastMessage", lastMessage);
-        // if the root message is from bot, and last message is not from bot, update the root message
-        // try {
-			//         // Get the full thread context
-			//         const messages = await getThread(channel, thread_ts, botUserId);
-			//         // console.log("messages", messages);
-			//         console.log("bot user id", botUserId);
-			//         if (messages.length > 1) {
-			//             const firstMessage = messages[0];
-			//             const firstMessageTopLeftContent = extractTopLeftContent(
-			//                 firstMessage.blocks || [],
-			//             );
-			//             const firstMessageMainContent = extractMainContent(
-			//                 firstMessage.blocks || [],
-			//             );
-			//             const lastMessage = messages[messages.length - 1];
-			//             console.log("The first message is from the bot. updating it");
+		
+		
 			//             // update the first message
 			//             await updateMessageInChannel({
 			//                 channel,
