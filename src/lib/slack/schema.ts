@@ -158,13 +158,15 @@ export const createSlackMessageBlocks = (props: {
 					},
 				]
 			: [];
-	const onlineSection = props.mainContent.online.reduce<
-		Array<LinkButtonBlock | DividerBlock>
-	>((acc, userMention) => {
+
+	const appendBlock = (
+		prev: Array<LinkButtonBlock | DividerBlock>,
+		userMention: string,
+	) => {
 		const userId = userMention.replace("<@", "").replace(">", "");
 		const user = props.users.find((u) => u.userId === userId);
 		const huddleUrl = user?.huddleUrl;
-		acc.push({
+		prev.push({
 			type: "section",
 			text: {
 				type: "mrkdwn",
@@ -182,11 +184,14 @@ export const createSlackMessageBlocks = (props: {
 				action_id: "button-action",
 			},
 		});
-		acc.push({
+		prev.push({
 			type: "divider",
 		});
-		return acc;
-	}, []);
+		return prev;
+	};
+	const onlineSection = props.mainContent.online.reduce<
+		Array<LinkButtonBlock | DividerBlock>
+	>(appendBlock, []);
 	const offlineSectionHeader =
 		props.mainContent.offline.length > 0
 			? [
@@ -202,33 +207,7 @@ export const createSlackMessageBlocks = (props: {
 			: [];
 	const offlineSection = props.mainContent.offline.reduce<
 		Array<LinkButtonBlock | DividerBlock>
-	>((acc, userId) => {
-		const userMention = `<@${userId}>`;
-		const user = props.users.find((u) => u.userId === userId);
-		const huddleUrl = user?.huddleUrl;
-		acc.push({
-			type: "section",
-			text: {
-				type: "mrkdwn",
-				text: userMention,
-			},
-			accessory: {
-				type: "button",
-				text: {
-					type: "plain_text",
-					text: "Join Huddle",
-					emoji: true,
-				},
-				value: "click_me_123",
-				url: huddleUrl || "https://example.com",
-				action_id: "button-action",
-			},
-		});
-		acc.push({
-			type: "divider",
-		});
-		return acc;
-	}, []);
+	>(appendBlock, []);
 	const footer = [
 		{
 			type: "section",

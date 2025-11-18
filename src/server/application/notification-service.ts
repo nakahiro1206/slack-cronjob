@@ -51,7 +51,7 @@ class NotificationService {
 		const initMessageRes = await this.messengerRepository.postMessage(
 			channel,
 			title,
-			`${description}\n*🔄 Status:* generating...`,
+			`${description}\n*🔄 Status:* initializing...`,
 			{ offline: [], online: [] },
 			[],
 		);
@@ -128,6 +128,15 @@ class NotificationService {
 			},
 		);
 
+		const updateToPendingRes = await this.messengerRepository.updateMessage(
+			channelId,
+			title,
+			`${description}\n*🔄 Status:* updating...`,
+			info.rootMessageTs!,
+			{ offline: [], online: [] },
+			[],
+		);
+
 		const usersResult = await getUsers();
 		const users = usersResult.match(
 			(users) => users,
@@ -135,15 +144,6 @@ class NotificationService {
 				console.error("Failed to get users:", error);
 				return [];
 			},
-		);
-
-		const updateToPendingRes = await this.messengerRepository.updateMessage(
-			channelId,
-			title,
-			`${description}\n*🔄 Status:* updating...`,
-			info.rootMessageTs!,
-			info.userTagAssignments,
-			users,
 		);
 
 		updateToPendingRes.match(
@@ -179,7 +179,7 @@ class NotificationService {
 		const updateToNewContentRes = await this.messengerRepository.updateMessage(
 			channelId,
 			title,
-			`${description}\n*🔄 Status:* updating...`,
+			`${description}`,
 			info.rootMessageTs!,
 			obj,
 			users,
