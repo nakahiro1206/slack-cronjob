@@ -176,11 +176,11 @@ export const createSlackMessageBlocks = (props: {
 				type: "button",
 				text: {
 					type: "plain_text",
-					text: "Join Huddle",
+					text: huddleUrl ? "Join Huddle" : "Not Registered",
 					emoji: true,
 				},
 				value: "click_me_123",
-				url: huddleUrl || "https://example.com",
+				url: huddleUrl || "https://www.google.com/",
 				action_id: "button-action",
 			},
 		});

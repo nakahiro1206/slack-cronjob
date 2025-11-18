@@ -158,7 +158,7 @@ class NotificationService {
 			[
 				{
 					role: "user",
-					content: `User IDs: ${JSON.stringify(info.userTagAssignments)}`,
+					content: `${JSON.stringify(info.userTagAssignments)} Above is the corrent user IDs and assignments for online/offline meeting. Please apply the following update request.`,
 				},
 				{
 					role: "user",
