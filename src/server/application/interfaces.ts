@@ -1,9 +1,9 @@
 import { Result } from "@/lib/result";
-import type { User } from "@/models/user";
 import type {
 	UserTagsAssignment,
 	MessageParam,
 	ThreadMessage,
+	User,
 } from "../domain/entities";
 
 export interface UserRepositoryInterface {
@@ -52,4 +52,12 @@ export interface MessengerRepositoryInterface {
 		userTagsAssignment: UserTagsAssignment,
 		users: User[],
 	): Promise<Result<void, Error>>;
+}
+
+export interface UserDatabaseRepositoryInterface {
+	getUsers(): Promise<Result<User[], Error>>;
+	getUserById(userId: string): Promise<Result<User, Error>>;
+	addUser(user: User): Promise<Result<void, Error>>;
+	updateUser(user: User): Promise<Result<void, Error>>;
+	deleteUser(userId: string): Promise<Result<void, Error>>;
 }
