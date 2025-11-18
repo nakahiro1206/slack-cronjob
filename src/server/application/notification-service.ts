@@ -45,6 +45,22 @@ class NotificationService {
 			},
 		];
 		const { hour, minute, date, day, month, year } = getJapanTimeAsObject();
+		const title = `*📣 1on1 order* \n This order is for the meeting on ${day}, ${month} ${date}, ${year}.`;
+		const description = `*⏰ Created at(UTC+9):*\n ${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} ${day}, ${month} ${date}, ${year}`;
+
+		const initMessageRes = await this.messengerRepository.postMessage(
+			channel,
+			title,
+			`${description}\n*🔄 Status:* generating...`,
+			{ offline: [], online: [] },
+			[],
+		);
+		const messageTs = initMessageRes.match(
+			({ messageTs }) => messageTs,
+			(error) => {
+				throw error;
+			},
+		);
 
 		const usersResult = await getUsers();
 		const users = usersResult.match(
@@ -70,12 +86,11 @@ class NotificationService {
 			throw new Error("Failed to generate response");
 		}
 
-		const title = `*📣 1on1 order* \n This order is for the meeting on ${day}, ${month} ${date}, ${year}.`;
-		const description = `*⏰ Created at(UTC+9):*\n ${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} ${day}, ${month} ${date}, ${year}`;
-		const result = await this.messengerRepository.postMessage(
+		const result = await this.messengerRepository.updateMessage(
 			channel,
 			title,
 			description,
+			messageTs,
 			obj,
 			users,
 		);
@@ -90,7 +105,8 @@ class NotificationService {
 	async updateRootMessageOfThread(
 		channelId: string,
 		threadTs: string,
-		status: string,
+		text: string,
+		botUserId: string,
 	) {
 		const { hour, minute, date, day, month, year } = getJapanTimeAsObject();
 		const title = `*📣 1on1 order* \n This order is for the meeting on ${day}, ${month} ${date}, ${year}.`;
@@ -121,16 +137,55 @@ class NotificationService {
 			},
 		);
 
-		const res = await this.messengerRepository.updateMessage(
+		const updateToPendingRes = await this.messengerRepository.updateMessage(
 			channelId,
 			title,
-			`${description}\n*🔄 Status:* ${status}`,
+			`${description}\n*🔄 Status:* updating...`,
 			info.rootMessageTs!,
 			info.userTagAssignments,
 			users,
 		);
 
-		res.match(
+		updateToPendingRes.match(
+			() => {},
+			(error) => {
+				console.error("Failed to update message:", error);
+				throw error;
+			},
+		);
+
+		const objectResult = await this.llmRepository.generateResponse(
+			[
+				{
+					role: "user",
+					content: `User IDs: ${JSON.stringify(info.userTagAssignments)}`,
+				},
+				{
+					role: "user",
+					content: removeBotUserIdTag(text, botUserId),
+				},
+			],
+			() => {},
+		);
+
+		const obj = objectResult.match(
+			(res) => res,
+			(error) => {
+				console.error("Failed to generate response:", error);
+				throw error;
+			},
+		);
+
+		const updateToNewContentRes = await this.messengerRepository.updateMessage(
+			channelId,
+			title,
+			`${description}\n*🔄 Status:* updating...`,
+			info.rootMessageTs!,
+			obj,
+			users,
+		);
+
+		updateToNewContentRes.match(
 			() => {},
 			(error) => {
 				console.error("Failed to update message:", error);

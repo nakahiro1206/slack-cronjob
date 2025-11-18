@@ -43,64 +43,20 @@ export async function slackEventPresentation(
 						botUserId,
 					),
 				);
-				return new Response("Success!", { status: 200 });
+				return new Response("Successfully initialized order!", { status: 200 });
 			}
 
 			const { thread_ts, channel } = event;
-
-			// const updateMessage = await updateStatusInThreadUtil("is thinking...", event);
-
-			// try {
-			//         // Get the full thread context
-			//         const messages = await getThread(channel, thread_ts, botUserId);
-			//         // console.log("messages", messages);
-			//         console.log("bot user id", botUserId);
-			//         if (messages.length > 1) {
-			//             const firstMessage = messages[0];
-			//             const firstMessageTopLeftContent = extractTopLeftContent(
-			//                 firstMessage.blocks || [],
-			//             );
-			//             const firstMessageMainContent = extractMainContent(
-			//                 firstMessage.blocks || [],
-			//             );
-			//             const lastMessage = messages[messages.length - 1];
-			//             console.log("The first message is from the bot. updating it");
-			//             // update the first message
-			//             await updateMessageInChannel({
-			//                 channel,
-			//                 title: firstMessageTopLeftContent,
-			//                 timestamp: firstMessage.ts as string,
-			//                 messages: undefined, // show loading state
-			//             });
-
-			//             console.log("lastMessage", lastMessage);
-
-			//             const queries: MessageParam[] = [
-			//                 {
-			//                     role: "assistant",
-			//                     content: "User IDs: "+ JSON.stringify(firstMessageMainContent),
-			//                 },
-			//                 {
-			//                     role: "user",
-			//                     content: removeBotUserIdTag(lastMessage.text, botUserId),
-			//                 },
-			//             ];
-
-			//             console.log("queries", queries);
-			//             // update the message with the LLM's response
-			//             await updateMessageInChannel({
-			//                 channel,
-			//                 title: firstMessageTopLeftContent,
-			//                 timestamp: firstMessage.ts as string,
-			//                 messages: queries,
-			//             });
-			//             return;
-			//         }
-
-			//         console.log("Successfully handled app mention in thread");
-			//     } catch (error) {
-			//         console.error("Error handling app mention in thread:", error);
-			//     }
+			console.log("Handling app mention in thread:");
+			waitUntil(
+				notificationService.updateRootMessageOfThread(
+					channel,
+					thread_ts as string,
+					event.text,
+					botUserId,
+				),
+			);
+			return new Response("Successfully updated order!", { status: 200 });
 		}
 
 		// if (event.type === "assistant_thread_started") {

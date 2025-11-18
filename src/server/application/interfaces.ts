@@ -43,7 +43,7 @@ export interface MessengerRepositoryInterface {
 		description: string,
 		userTagsAssignment: UserTagsAssignment,
 		users: User[],
-	): Promise<Result<void, Error>>;
+	): Promise<Result<{ messageTs: string }, Error>>;
 	updateMessage(
 		channelId: string,
 		title: string,

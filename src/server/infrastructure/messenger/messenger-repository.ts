@@ -143,7 +143,7 @@ export class MessengerRepository implements MessengerRepositoryInterface {
 		description: string,
 		userTagsAssignment: UserTagsAssignment,
 		users: User[],
-	): Promise<Result<void, Error>> {
+	): Promise<Result<{ messageTs: string }, Error>> {
 		const initialMessage = await this.client.chat.postMessage({
 			channel: channelId,
 			// if you ommit thread_ts, the message will be posted in the channel
@@ -163,7 +163,9 @@ export class MessengerRepository implements MessengerRepositoryInterface {
 		if (!initialMessage || !initialMessage.ts)
 			return Err(new Error("Failed to post initial message"));
 
-		return Ok(undefined);
+		return Ok({
+			messageTs: initialMessage.ts,
+		});
 	}
 
 	async updateMessage(
