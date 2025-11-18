@@ -7,7 +7,13 @@ import { Button } from "../../ui/button";
 import { Card } from "../../ui/card";
 import { Spinner } from "../../ui/spinner";
 import { UpcomingCard } from "./UpcomingCard";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import {
+	Carousel,
+	CarouselContent,
+	CarouselItem,
+	CarouselNext,
+	CarouselPrevious,
+} from "@/components/ui/carousel";
 import { useMobile } from "@/lib/useMobile";
 
 type Props = {
@@ -20,7 +26,7 @@ export const UpcomingCardList: FC<Props> = ({
 	users,
 	refetchUpcomingSlots: refetchChannels,
 }) => {
-	const {isMobile} = useMobile();
+	const { isMobile } = useMobile();
 	const {
 		mutate: initializeUpcomingSlotsMutation,
 		isPending: loadingInitializeUpcomingSlotsMutation,
@@ -83,8 +89,8 @@ export const UpcomingCardList: FC<Props> = ({
 								</CarouselItem>
 							))}
 					</CarouselContent>
-					<CarouselPrevious/>
-					<CarouselNext/>
+					<CarouselPrevious />
+					<CarouselNext />
 				</Carousel>
 			)}
 		</Card>

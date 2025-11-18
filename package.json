@@ -11,6 +11,8 @@
 		"format": "npx @biomejs/biome format --write",
 		"lint": "npx @biomejs/biome lint --write",
 		"check": "npx @biomejs/biome check --write",
+		"test": "vitest run",
+		"test:watch": "vitest",
 		"generate": "graphql-code-generator --config ./codegen.ts"
 	},
 	"dependencies": {
@@ -43,6 +45,7 @@
 		"luxon": "^3.6.1",
 		"next": "^15.5.6",
 		"next-themes": "^0.4.6",
+		"openai": "^6.8.1",
 		"random": "^5.4.0",
 		"react": "^19.1.0",
 		"react-day-picker": "^9.7.0",
@@ -56,13 +59,20 @@
 	"devDependencies": {
 		"@biomejs/biome": "2.3.4",
 		"@tailwindcss/postcss": "^4",
+		"@testing-library/dom": "^10.4.1",
+		"@testing-library/react": "^16.3.0",
 		"@types/luxon": "^3.6.2",
 		"@types/node": "^20",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
+		"@vitejs/plugin-react": "^5.1.1",
+		"jsdom": "^27.2.0",
 		"ngrok": "^5.0.0-beta.2",
 		"tailwindcss": "^4",
+		"tsconfig-paths": "^4.2.0",
 		"tw-animate-css": "^1.3.4",
-		"typescript": "^5.8.3"
+		"typescript": "^5.8.3",
+		"vite-tsconfig-paths": "^5.1.4",
+		"vitest": "^4.0.8"
 	}
 }

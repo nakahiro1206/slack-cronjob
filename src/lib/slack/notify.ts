@@ -148,7 +148,7 @@ export const notify = async (args: NotifyArgs): Promise<NotifyResult> => {
 					date,
 					year,
 					rng,
-					users
+					users,
 				});
 			}),
 		);

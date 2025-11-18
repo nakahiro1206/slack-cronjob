@@ -1,3 +1,10 @@
+/**
+ * To handle reply to Slack post properly,
+ * filter the thread root message is bot's message and
+ * sender is not bot,
+ * then update the thread root message.
+ */
+
 // import { App, HTTPReceiver } from "@slack/bolt";
 // import { WebClient } from "@slack/web-api";
 
