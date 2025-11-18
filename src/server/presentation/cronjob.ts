@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { notificationService } from "../application/notification-service";
+import { notificationService } from "@/server/application/container";
 
 export async function notifyByCronjobPresentation(request: NextRequest) {
 	// Verify the request is from Vercel Cron

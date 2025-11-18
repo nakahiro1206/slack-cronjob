@@ -3,20 +3,16 @@ import { removeBotUserIdTag } from "@/lib/slack/utils";
 import {
 	LLMRepositoryInterface,
 	MessengerRepositoryInterface,
+	UserDatabaseRepositoryInterface,
 } from "./interfaces";
 import { getJapanTimeAsObject } from "@/lib/date";
-import { getUsers } from "@/lib/firebase/user";
-import { NewLlmRepository, NewMessengerRepository } from "./di";
+import type { MessageParam } from "../domain/entities";
 
-export type MessageParam = {
-	role: "user" | "assistant";
-	content: string;
-};
-
-class NotificationService {
+export class NotificationService {
 	constructor(
 		private llmRepository: LLMRepositoryInterface,
 		private messengerRepository: MessengerRepositoryInterface,
+		private userDatabaseRepository: UserDatabaseRepositoryInterface,
 	) {}
 
 	async notifyByCronjob() {
@@ -62,7 +58,7 @@ class NotificationService {
 			},
 		);
 
-		const usersResult = await getUsers();
+		const usersResult = await this.userDatabaseRepository.getUsers();
 		const users = usersResult.match(
 			(users) => users,
 			(error) => {
@@ -137,7 +133,7 @@ class NotificationService {
 			[],
 		);
 
-		const usersResult = await getUsers();
+		const usersResult = await this.userDatabaseRepository.getUsers();
 		const users = usersResult.match(
 			(users) => users,
 			(error) => {
@@ -194,9 +190,3 @@ class NotificationService {
 		);
 	}
 }
-
-/** Dependency Injection */
-export const notificationService = new NotificationService(
-	NewLlmRepository(),
-	NewMessengerRepository(),
-);

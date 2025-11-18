@@ -1,7 +1,7 @@
 import type { SlackEvent } from "@slack/web-api";
 import { waitUntil } from "@vercel/functions";
 import { getBotId, verifyRequest } from "@/lib/slack/utils";
-import { notificationService } from "../application/notification-service";
+import { notificationService } from "@/server/application/container";
 
 export async function slackEventPresentation(
 	request: Request,
@@ -51,7 +51,7 @@ export async function slackEventPresentation(
 			waitUntil(
 				notificationService.updateRootMessageOfThread(
 					channel,
-					thread_ts as string,
+					thread_ts,
 					event.text,
 					botUserId,
 				),
