@@ -1,7 +1,5 @@
 import { Result, Ok, Err } from "@/lib/result";
-import {
-	MessengerRepositoryInterface,
-} from "@/server/application/interfaces";
+import { MessengerRepositoryInterface } from "@/server/application/interfaces";
 import type {
 	UserTagsAssignment,
 	ThreadMessage,
@@ -9,7 +7,12 @@ import type {
 import { WebClient } from "@slack/web-api";
 // import type { PurpleBlock } from "@slack/web-api/dist/response/ConversationsHistoryResponse";
 import { User } from "@/models/user";
-import { createSlackMessageBlocks, extractMainContent, extractTextFromBlocks, extractTopLeftContent } from "@/lib/slack/schema";
+import {
+	createSlackMessageBlocks,
+	extractMainContent,
+	extractTextFromBlocks,
+	extractTopLeftContent,
+} from "@/lib/slack/schema";
 
 type GetThreadMessagesReturn = ThreadMessage[];
 
@@ -19,20 +22,20 @@ export class MessengerRepository implements MessengerRepositoryInterface {
 		this.client = new WebClient(process.env.SLACK_BOT_TOKEN);
 	}
 
-    async getBotUserId() {
-        const { user_id: botUserId } = await this.client.auth.test();
-    
-        if (!botUserId) {
-            throw new Error("botUserId is undefined");
-        }
-        return botUserId;
-    };
+	async getBotUserId() {
+		const { user_id: botUserId } = await this.client.auth.test();
+
+		if (!botUserId) {
+			throw new Error("botUserId is undefined");
+		}
+		return botUserId;
+	}
 
 	async getThreadMessages(
 		channelId: string,
 		threadTs: string,
 	): Promise<Result<GetThreadMessagesReturn, Error>> {
-        const botUserId = await this.getBotUserId();
+		const botUserId = await this.getBotUserId();
 
 		const { messages } = await this.client.conversations.replies({
 			channel: channelId,
@@ -74,17 +77,22 @@ export class MessengerRepository implements MessengerRepositoryInterface {
 		return Ok(result);
 	}
 
-    async extractInfoFromThreadMessages(
+	async extractInfoFromThreadMessages(
 		channelId: string,
 		threadTs: string,
-	): Promise<Result<{
-		title: string;
-		userTagAssignments: UserTagsAssignment;
-		rootMessageTs: string | undefined;
-		userQuery: string;
-	}, Error>> {
-        const botUserId = await this.getBotUserId();
-        
+	): Promise<
+		Result<
+			{
+				title: string;
+				userTagAssignments: UserTagsAssignment;
+				rootMessageTs: string | undefined;
+				userQuery: string;
+			},
+			Error
+		>
+	> {
+		const botUserId = await this.getBotUserId();
+
 		const { messages } = await this.client.conversations.replies({
 			channel: channelId,
 			ts: threadTs,
@@ -110,12 +118,13 @@ export class MessengerRepository implements MessengerRepositoryInterface {
 					content = content.replace(`<@${botUserId}> `, "");
 				}
 
-				return message.blocks
+				return message.blocks;
 			})
 			.filter((blocks) => blocks !== null);
-		
+
 		const rootMessageBlocks = messageBlocksSequence[0] || [];
-		const lastMessageBlocks = messageBlocksSequence[messageBlocksSequence.length - 1] || [];
+		const lastMessageBlocks =
+			messageBlocksSequence[messageBlocksSequence.length - 1] || [];
 		const title = extractTopLeftContent(rootMessageBlocks);
 		const userTagAssignments = extractMainContent(rootMessageBlocks);
 		const userQuery = extractTextFromBlocks(lastMessageBlocks).join("\n");
@@ -129,14 +138,14 @@ export class MessengerRepository implements MessengerRepositoryInterface {
 	}
 
 	async postMessage(
-		channelIs: string,
+		channelId: string,
 		title: string,
 		description: string,
 		userTagsAssignment: UserTagsAssignment,
 		users: User[],
 	): Promise<Result<void, Error>> {
 		const initialMessage = await this.client.chat.postMessage({
-			channel: channelIs,
+			channel: channelId,
 			// if you ommit thread_ts, the message will be posted in the channel
 			text: "message in channel",
 			blocks: createSlackMessageBlocks({
@@ -157,48 +166,33 @@ export class MessengerRepository implements MessengerRepositoryInterface {
 		return Ok(undefined);
 	}
 
+	async updateMessage(
+		channelId: string,
+		title: string,
+		description: string,
+		timestamp: string,
+		userTagsAssignment: UserTagsAssignment,
+		users: User[],
+	): Promise<Result<void, Error>> {
+		const updatedMessage = await this.client.chat.update({
+			channel: channelId,
+			ts: timestamp,
+			text: "updated by the bot",
+			blocks: createSlackMessageBlocks({
+				top: {
+					left: title,
+					right: description,
+				},
+				mainContent: userTagsAssignment,
+				bottomContent:
+					"Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
+				users: users,
+			}),
+		});
 
-	// export const updateMessageInChannel = async (input: {
-	// 	channel: string;
-	// 	title: string;
-	// 	timestamp: string;
-	// 	messages: MessageParam[] | undefined;
-	// }) => {
-	// 	const { channel, title, timestamp, messages } = input;
-	// 	const { hour, minute, date, day, month, year } = getJapanTimeAsObject();
-	// 	const usersResult = await getUsers();
-	// 	const users = usersResult.match(
-	// 		(users) => users,
-	// 		(error) => {
-	// 			console.error("Failed to get users:", error);
-	// 			return [];
-	// 		},
-	// 	);
-	// 	const post = async (content: GenerateResponseReturn) => {
-	// 		await client.chat.update({
-	// 			channel: channel,
-	// 			ts: timestamp,
-	// 			text: "updated by the bot",
-	// 			blocks: createSlackMessageBlocks({
-	// 				top: {
-	// 					left: title,
-	// 					right: `*⏰ Updated at(UTC+9):*\n ${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} ${day}, ${month} ${date}, ${year}`,
-	// 				},
-	// 				mainContent: content,
-	// 				bottomContent:
-	// 					"Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
-	// 				users: users,
-	// 			}),
-	// 		});
-	// 	};
-	// 	if (messages === undefined || messages.length === 0) {
-	// 		await post({
-	// 			offline: ["updating", "order"],
-	// 			online: [],
-	// 		});
-	// 		return;
-	// 	}
-	// 	const result = await generateResponse(messages, () => {});
-	// 	await post(result);
-	// };
+		if (!updatedMessage || !updatedMessage.ts)
+			return Err(new Error("Failed to update message"));
+
+		return Ok(undefined);
+	}
 }

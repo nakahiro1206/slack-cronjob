@@ -20,6 +20,7 @@ class NotificationService {
 	) {}
 
 	async notifyByCronjob() {
+		// TODO: decouple the complicated inside implementation of this function
 		const notifyResult = await notify({
 			mode: "sameDayOnly",
 			updateSlot: true,
@@ -86,63 +87,57 @@ class NotificationService {
 		);
 	}
 
-    async updateRootMessageOfThread(
-        channelId: string,
-        threadTs: string,
-        status: string,
-    ) {
-        const infoResult = await this.messengerRepository.extractInfoFromThreadMessages(
-            channelId, threadTs
-        )
-        const info = infoResult.match(
-            (res) => {
+	async updateRootMessageOfThread(
+		channelId: string,
+		threadTs: string,
+		status: string,
+	) {
+		const { hour, minute, date, day, month, year } = getJapanTimeAsObject();
+		const title = `*📣 1on1 order* \n This order is for the meeting on ${day}, ${month} ${date}, ${year}.`;
+		const description = `*⏰ Updated at(UTC+9):*\n ${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} ${day}, ${month} ${date}, ${year}`;
+
+		const infoResult =
+			await this.messengerRepository.extractInfoFromThreadMessages(
+				channelId,
+				threadTs,
+			);
+		const info = infoResult.match(
+			(res) => {
 				console.log("info", res);
-                return res
-            },
-            (error) => {
+				return res;
+			},
+			(error) => {
 				console.error("Failed to extract info from thread messages:", error);
-                throw error;
-            },
-        );
-		
-		
-			//             // update the first message
-			//             await updateMessageInChannel({
-			//                 channel,
-			//                 title: firstMessageTopLeftContent,
-			//                 timestamp: firstMessage.ts as string,
-			//                 messages: undefined, // show loading state
-			//             });
+				throw error;
+			},
+		);
 
-			//             console.log("lastMessage", lastMessage);
+		const usersResult = await getUsers();
+		const users = usersResult.match(
+			(users) => users,
+			(error) => {
+				console.error("Failed to get users:", error);
+				return [];
+			},
+		);
 
-			//             const queries: MessageParam[] = [
-			//                 {
-			//                     role: "assistant",
-			//                     content: "User IDs: "+ JSON.stringify(firstMessageMainContent),
-			//                 },
-			//                 {
-			//                     role: "user",
-			//                     content: removeBotUserIdTag(lastMessage.text, botUserId),
-			//                 },
-			//             ];
+		const res = await this.messengerRepository.updateMessage(
+			channelId,
+			title,
+			`${description}\n*🔄 Status:* ${status}`,
+			info.rootMessageTs!,
+			info.userTagAssignments,
+			users,
+		);
 
-			//             console.log("queries", queries);
-			//             // update the message with the LLM's response
-			//             await updateMessageInChannel({
-			//                 channel,
-			//                 title: firstMessageTopLeftContent,
-			//                 timestamp: firstMessage.ts as string,
-			//                 messages: queries,
-			//             });
-			//             return;
-			//         }
-
-			//         console.log("Successfully handled app mention in thread");
-			//     } catch (error) {
-			//         console.error("Error handling app mention in thread:", error);
-			//     }
-    }
+		res.match(
+			() => {},
+			(error) => {
+				console.error("Failed to update message:", error);
+				throw error;
+			},
+		);
+	}
 }
 
 /** Dependency Injection */

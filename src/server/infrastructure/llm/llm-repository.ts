@@ -1,11 +1,11 @@
 import { OpenAI } from "openai";
-import { Result, Ok, Err } from "@/lib/result";
+import { Result, Ok, Err } from "../../../lib/result";
+import { LLMRepositoryInterface } from "../../../server/application/interfaces";
 import {
-	GenerateResponseReturnSchema,
-	GenerateResponseReturn,
-	MessageParam,
-	LLMRepositoryInterface,
-} from "@/server/application/interfaces";
+	type MessageParam,
+	UserTagsAssignmentSchema,
+	type UserTagsAssignment,
+} from "../../../server/domain/entities";
 
 export class LlmRepository implements LLMRepositoryInterface {
 	private client: OpenAI;
@@ -19,7 +19,7 @@ export class LlmRepository implements LLMRepositoryInterface {
 	generateResponse = async (
 		messages: MessageParam[],
 		updateStatus?: (status: string) => void,
-	): Promise<Result<GenerateResponseReturn, Error>> => {
+	): Promise<Result<UserTagsAssignment, Error>> => {
 		const res = await this.client.chat.completions.create({
 			model: "gpt-4o-2024-08-06",
 			messages: new Array<MessageParam>()
@@ -66,16 +66,14 @@ export class LlmRepository implements LLMRepositoryInterface {
 		});
 		const obj = res.choices[0].message.content;
 		console.log("Raw Response from OpenAI:", obj);
-		const parseObj = (
-			o: string | null,
-		): Result<GenerateResponseReturn, Error> => {
+		const parseObj = (o: string | null): Result<UserTagsAssignment, Error> => {
 			if (o === null) {
 				console.error("OpenAI returned null response");
 				return Err(new Error("OpenAI returned null response"));
 			}
 			try {
 				const parsed = JSON.parse(o);
-				const result = GenerateResponseReturnSchema.safeParse(parsed);
+				const result = UserTagsAssignmentSchema.safeParse(parsed);
 				if (!result.success) {
 					console.error("Validation error:", result.error);
 					return Err(new Error("Response validation failed"));

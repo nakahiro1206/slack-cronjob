@@ -1,6 +1,5 @@
 import type { SlackEvent } from "@slack/web-api";
 import { waitUntil } from "@vercel/functions";
-import { handleAppMention } from "@/lib/slack/handle-app-mension";
 import { getBotId, verifyRequest } from "@/lib/slack/utils";
 import { notificationService } from "../application/notification-service";
 

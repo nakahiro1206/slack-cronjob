@@ -6,8 +6,6 @@ import type {
 	ThreadMessage,
 } from "../domain/entities";
 
-
-
 export interface UserRepositoryInterface {
 	getUsers(): Promise<string[]>;
 }
@@ -20,24 +18,37 @@ export interface LLMRepositoryInterface {
 }
 
 export interface MessengerRepositoryInterface {
-    getBotUserId(): Promise<string>;
+	getBotUserId(): Promise<string>;
 	getThreadMessages(
 		channelId: string,
 		threadTs: string,
 	): Promise<Result<ThreadMessage[], Error>>;
-    extractInfoFromThreadMessages(
+	extractInfoFromThreadMessages(
 		channelId: string,
 		threadTs: string,
-	): Promise<Result<{
-		title: string;
-		userTagAssignments: UserTagsAssignment;
-		rootMessageTs: string | undefined;
-		userQuery: string;
-	}, Error>>;
+	): Promise<
+		Result<
+			{
+				title: string;
+				userTagAssignments: UserTagsAssignment;
+				rootMessageTs: string | undefined;
+				userQuery: string;
+			},
+			Error
+		>
+	>;
 	postMessage(
 		channelIs: string,
 		title: string,
 		description: string,
+		userTagsAssignment: UserTagsAssignment,
+		users: User[],
+	): Promise<Result<void, Error>>;
+	updateMessage(
+		channelId: string,
+		title: string,
+		description: string,
+		timestamp: string,
 		userTagsAssignment: UserTagsAssignment,
 		users: User[],
 	): Promise<Result<void, Error>>;

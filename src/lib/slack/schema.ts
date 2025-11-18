@@ -37,12 +37,14 @@ const HeaderBlockSchema = z.object({
 		text: z.string(),
 		emoji: z.boolean(),
 	}),
-})
+});
 
 export type HeaderBlock = z.infer<typeof HeaderBlockSchema>;
 
 // get user ids
-export const extractMainContent = (blocks: PurpleBlock[]): UserTagsAssignment => {
+export const extractMainContent = (
+	blocks: PurpleBlock[],
+): UserTagsAssignment => {
 	if (blocks.length <= 2) {
 		return {
 			offline: [],
@@ -68,7 +70,7 @@ export const extractMainContent = (blocks: PurpleBlock[]): UserTagsAssignment =>
 	let currentSection: "offline" | "online" = "online"; // always start with online section
 	result.data.forEach((block) => {
 		if (block.type === "header") {
-			const header = block.text.text.toLowerCase()
+			const header = block.text.text.toLowerCase();
 			if (header.includes("offline")) {
 				currentSection = "offline";
 			} else if (header.includes("online")) {
