@@ -1,23 +1,23 @@
-import { WebClient } from "@slack/web-api";
-import { Random } from "random";
-import {
-	getJapanTimeAsObject,
-	isSameDateWithTodayJapanTime,
-	isSameOrBeforeTodayJapanTime,
-} from "@/lib/date";
-import {
-	getUpcomingSlots,
-	initializeNextWeekSlots,
-} from "@/lib/firebase/upcoming";
-import type { Channel } from "@/models/channel";
-import { createSlackMessageBlocks } from "./schema";
-import { getUsers } from "../firebase/user";
-import { User } from "@/models/user";
+// import { WebClient } from "@slack/web-api";
+// import { Random } from "random";
+// import {
+// 	getJapanTimeAsObject,
+// 	isSameDateWithTodayJapanTime,
+// 	isSameOrBeforeTodayJapanTime,
+// } from "@/lib/date";
+// import {
+// 	getUpcomingSlots,
+// 	initializeNextWeekSlots,
+// } from "@/lib/firebase/upcoming";
+// import type { Channel } from "@/models/channel";
+// import { createSlackMessageBlocks } from "./schema";
+// import { getUsers } from "../firebase/user";
+// import { User } from "@/models/user";
 
-type NotifyResult = {
-	success: boolean;
-	message: string | undefined;
-};
+// type NotifyResult = {
+// 	success: boolean;
+// 	message: string | undefined;
+// };
 
 async function postMessage({
 	slack,
@@ -75,117 +75,117 @@ async function postMessage({
 	};
 }
 
-type NotifyArgs = {
-	updateSlot: boolean;
-} & (
-	| {
-			mode: "sameDayOnly";
-	  }
-	| {
-			mode: "specifiedChannels";
-			channelIds: string[];
-	  }
-);
+// type NotifyArgs = {
+// 	updateSlot: boolean;
+// } & (
+// 	| {
+// 			mode: "sameDayOnly";
+// 	  }
+// 	| {
+// 			mode: "specifiedChannels";
+// 			channelIds: string[];
+// 	  }
+// );
 
-export const notify = async (args: NotifyArgs): Promise<NotifyResult> => {
-	// Initialize Slack client
-	const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
+// export const notify = async (args: NotifyArgs): Promise<NotifyResult> => {
+// 	// Initialize Slack client
+// 	const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
 
-	// Extract date and day information
-	const { hour, minute, date, day, month, year } = getJapanTimeAsObject();
+// 	// Extract date and day information
+// 	const { hour, minute, date, day, month, year } = getJapanTimeAsObject();
 
-	const rng = new Random(`${new Date().toISOString()}`);
+// 	const rng = new Random(`${new Date().toISOString()}`);
 
-	const usersResult = await getUsers();
-	const users = usersResult.match(
-		(users) => users,
-		(error) => {
-			console.error("Failed to get users:", error);
-			return [];
-		},
-	);
+// 	const usersResult = await getUsers();
+// 	const users = usersResult.match(
+// 		(users) => users,
+// 		(error) => {
+// 			console.error("Failed to get users:", error);
+// 			return [];
+// 		},
+// 	);
 
-	try {
-		// Get all available channels
-		const getChannelsResult = await getUpcomingSlots();
-		const channels = getChannelsResult.match(
-			(channels) => channels,
-			(error) => [],
-		);
+// 	try {
+// 		// Get all available channels
+// 		const getChannelsResult = await getUpcomingSlots();
+// 		const channels = getChannelsResult.match(
+// 			(channels) => channels,
+// 			(error) => [],
+// 		);
 
-		if (channels.length === 0) {
-			return {
-				success: false,
-				message: "No channels found",
-			};
-		}
+// 		if (channels.length === 0) {
+// 			return {
+// 				success: false,
+// 				message: "No channels found",
+// 			};
+// 		}
 
-		let targetChannels: Channel[] = [];
-		if (args.mode === "sameDayOnly") {
-			targetChannels = channels.filter((channel) => {
-				return isSameDateWithTodayJapanTime(channel.date);
-			});
-		} else if (args.mode === "specifiedChannels") {
-			// This mode is basically test mode. so it should bypass date check.
-			targetChannels = channels.filter((channel) =>
-				args.channelIds.includes(channel.channelId),
-			);
-		} else {
-			return {
-				success: false,
-				message: "Invalid mode",
-			};
-		}
+// 		let targetChannels: Channel[] = [];
+// 		if (args.mode === "sameDayOnly") {
+// 			targetChannels = channels.filter((channel) => {
+// 				return isSameDateWithTodayJapanTime(channel.date);
+// 			});
+// 		} else if (args.mode === "specifiedChannels") {
+// 			// This mode is basically test mode. so it should bypass date check.
+// 			targetChannels = channels.filter((channel) =>
+// 				args.channelIds.includes(channel.channelId),
+// 			);
+// 		} else {
+// 			return {
+// 				success: false,
+// 				message: "Invalid mode",
+// 			};
+// 		}
 
-		const results = await Promise.all(
-			targetChannels.map(async (channel) => {
-				return postMessage({
-					slack,
-					channel,
-					hour,
-					minute,
-					day,
-					month,
-					date,
-					year,
-					rng,
-					users,
-				});
-			}),
-		);
+// 		const results = await Promise.all(
+// 			targetChannels.map(async (channel) => {
+// 				return postMessage({
+// 					slack,
+// 					channel,
+// 					hour,
+// 					minute,
+// 					day,
+// 					month,
+// 					date,
+// 					year,
+// 					rng,
+// 					users,
+// 				});
+// 			}),
+// 		);
 
-		if (args.updateSlot) {
-			const outdatedChannels = channels.filter((c) =>
-				isSameOrBeforeTodayJapanTime(c.date),
-			);
-			await initializeNextWeekSlots(outdatedChannels.map((c) => c.channelId));
-		}
+// 		if (args.updateSlot) {
+// 			const outdatedChannels = channels.filter((c) =>
+// 				isSameOrBeforeTodayJapanTime(c.date),
+// 			);
+// 			await initializeNextWeekSlots(outdatedChannels.map((c) => c.channelId));
+// 		}
 
-		const failedChannels = results
-			.map((result) => {
-				if (result.ok) {
-					return undefined;
-				} else {
-					return result.channelName;
-				}
-			})
-			.filter((channelName) => channelName !== undefined);
+// 		const failedChannels = results
+// 			.map((result) => {
+// 				if (result.ok) {
+// 					return undefined;
+// 				} else {
+// 					return result.channelName;
+// 				}
+// 			})
+// 			.filter((channelName) => channelName !== undefined);
 
-		if (failedChannels.length > 0) {
-			return {
-				success: false,
-				message: `Failed to post message: ${failedChannels.join(", ")}`,
-			};
-		}
+// 		if (failedChannels.length > 0) {
+// 			return {
+// 				success: false,
+// 				message: `Failed to post message: ${failedChannels.join(", ")}`,
+// 			};
+// 		}
 
-		return {
-			success: true,
-			message: "Message posted successfully",
-		};
-	} catch (error) {
-		return {
-			success: false,
-			message: `Failed to post message: ${error}`,
-		};
-	}
-};
+// 		return {
+// 			success: true,
+// 			message: "Message posted successfully",
+// 		};
+// 	} catch (error) {
+// 		return {
+// 			success: false,
+// 			message: `Failed to post message: ${error}`,
+// 		};
+// 	}
+// };
