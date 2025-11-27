@@ -48,6 +48,7 @@ async function postMessage({
 }> {
 	// Create user mentions for the channel members
 	const shuffledUserIds = channel.userIds.sort(() => rng.float(0, 1) - 0.5);
+	const userMentions = shuffledUserIds.map((userId) => `<@${userId}>`);
 
 	const result = await slack.chat.postMessage({
 		channel: channel.channelId,
@@ -59,7 +60,7 @@ async function postMessage({
 				right: `*⏰ Created at (UTC+9):*\n ${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} ${day}, ${month} ${date}, ${year}`,
 			},
 			mainContent: {
-				offline: shuffledUserIds,
+				offline: userMentions,
 				online: [],
 			},
 			bottomContent:

@@ -7,6 +7,24 @@ import {
 	type UserTagsAssignment,
 } from "../../../server/domain/entities";
 
+export const decorateUserTagIfNeeded = (tag: string): string => {
+	const regex = /<@[\w\d]+>/g;
+	if (tag.match(regex)) {
+		return tag;
+	} else {
+		return `<@${tag}>`;
+	}
+};
+
+export const formatUserAssignment = (assignment: {
+	offline: string[];
+	online: string[];
+}) : UserTagsAssignment => {
+	assignment.offline = assignment.offline.map(decorateUserTagIfNeeded);
+	assignment.online = assignment.online.map(decorateUserTagIfNeeded);
+	return assignment;
+}
+
 export class LlmRepository implements LLMRepositoryInterface {
 	private client: OpenAI;
 	constructor() {
@@ -78,7 +96,9 @@ export class LlmRepository implements LLMRepositoryInterface {
 					console.error("Validation error:", result.error);
 					return Err(new Error("Response validation failed"));
 				}
-				return Ok(result.data);
+				// if the user tags are not decorated properly, add them here
+				const formatted = formatUserAssignment(result.data);
+				return Ok(formatted);
 			} catch (e) {
 				console.error("Failed to parse JSON from OpenAI response:", e);
 				return Err(new Error("Failed to parse JSON from OpenAI response"));
