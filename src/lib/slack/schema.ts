@@ -130,6 +130,23 @@ export const createSlackMessageBlocks = (props: {
 	bottomContent: string;
 	users: User[];
 }) => {
+	const validateMainContent = () => {
+		const regex = /^<@U[A-Z0-9]+>$/;
+		props.mainContent.offline.forEach((mention) => {
+			if (!regex.test(mention)) {
+				console.error(`Invalid user mention format: ${mention}`);
+				throw new Error(`Invalid user mention format: ${mention}`);
+			}
+		});
+		props.mainContent.online.forEach((mention) => {
+			if (!regex.test(mention)) {
+				console.error(`Invalid user mention format: ${mention}`);
+				throw new Error(`Invalid user mention format: ${mention}`);
+			}
+		});
+	}
+	validateMainContent();
+
 	const header = [
 		{
 			type: "section",
