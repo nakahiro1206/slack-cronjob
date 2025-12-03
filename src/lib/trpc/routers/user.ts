@@ -1,28 +1,11 @@
 import { z } from "zod";
-import {
-	addUser as addUserFirebase,
-	deleteUser as deleteUserFirebase,
-	getUsers as getUsersFirebase,
-	updateUser as updateUserFirebase,
-} from "@/lib/firebase/user";
+import { userService } from "@/server/application/container";
 import { publicProcedure, router } from "../server";
 
 export const userRouter = router({
 	// Get all users
 	getAll: publicProcedure.query(async () => {
-		const getUsersResult = await getUsersFirebase();
-		return getUsersResult.match(
-			(users) =>
-				users.map((user) => ({
-					id: user.userId,
-					name: user.userName,
-					huddleUrl: user.huddleUrl,
-				})),
-			(error) => {
-				console.error("Failed to get users:", error);
-				return [];
-			},
-		);
+		return await userService.getAllUsers();
 	}),
 
 	// Add a new user
@@ -31,28 +14,11 @@ export const userRouter = router({
 			z.object({
 				id: z.string(),
 				name: z.string(),
+				url: z.string().or(z.undefined()),
 			}),
 		)
 		.mutation(async ({ input }) => {
-			const addUserResult = await addUserFirebase({
-				userId: input.id,
-				userName: input.name,
-			});
-			return addUserResult.match<{
-				success: boolean;
-			}>(
-				() => {
-					return {
-						success: true,
-					};
-				},
-				(error) => {
-					console.error("Failed to add user:", error);
-					return {
-						success: false,
-					};
-				},
-			);
+			return await userService.addUser(input);
 		}),
 
 	// update User
@@ -65,26 +31,7 @@ export const userRouter = router({
 			}),
 		)
 		.mutation(async ({ input }) => {
-			const updateUserResult = await updateUserFirebase({
-				userId: input.id,
-				userName: input.name,
-				huddleUrl: input.url,
-			});
-			return updateUserResult.match<{
-				success: boolean;
-			}>(
-				() => {
-					return {
-						success: true,
-					};
-				},
-				(error) => {
-					console.error("Failed to update user:", error);
-					return {
-						success: false,
-					};
-				},
-			);
+			return await userService.updateUser(input);
 		}),
 
 	// delete User
@@ -95,21 +42,6 @@ export const userRouter = router({
 			}),
 		)
 		.mutation(async ({ input }) => {
-			const deleteUserResult = await deleteUserFirebase(input.id);
-			return deleteUserResult.match<{
-				success: boolean;
-			}>(
-				() => {
-					return {
-						success: true,
-					};
-				},
-				(error) => {
-					console.error("Failed to delete user:", error);
-					return {
-						success: false,
-					};
-				},
-			);
+			return await userService.deleteUser(input.id);
 		}),
 });

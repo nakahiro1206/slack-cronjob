@@ -1,9 +1,10 @@
-import { Result } from "@/lib/result";
-import type { User } from "@/models/user";
+import type { Result } from "@/lib/result";
 import type {
-	UserTagsAssignment,
+	Channel,
 	MessageParam,
-	ThreadMessage,
+	UpcomingSlot,
+	User,
+	UserTagsAssignment,
 } from "../domain/entities";
 
 export interface UserRepositoryInterface {
@@ -19,10 +20,6 @@ export interface LLMRepositoryInterface {
 
 export interface MessengerRepositoryInterface {
 	getBotUserId(): Promise<string>;
-	getThreadMessages(
-		channelId: string,
-		threadTs: string,
-	): Promise<Result<ThreadMessage[], Error>>;
 	extractInfoFromThreadMessages(
 		channelId: string,
 		threadTs: string,
@@ -51,5 +48,53 @@ export interface MessengerRepositoryInterface {
 		timestamp: string,
 		userTagsAssignment: UserTagsAssignment,
 		users: User[],
+	): Promise<Result<void, Error>>;
+}
+
+export interface UserDatabaseRepositoryInterface {
+	getUsers(): Promise<Result<User[], Error>>;
+	getUserById(userId: string): Promise<Result<User, Error>>;
+	addUser(user: User): Promise<Result<void, Error>>;
+	updateUser(user: User): Promise<Result<void, Error>>;
+	deleteUser(userId: string): Promise<Result<void, Error>>;
+}
+
+export interface UpcomingSlotDatabaseRepositoryInterface {
+	getUpcomingSlots(): Promise<Result<UpcomingSlot[], Error>>;
+	initializeSlotsWithUpcomingDate(
+		channels: Channel[],
+	): Promise<Result<void, Error>>;
+	deleteUpcomingSlot(channelId: string): Promise<Result<void, Error>>;
+	registerUsers(
+		channelId: string,
+		userIds: string[],
+	): Promise<Result<void, Error>>;
+	removeUsers(
+		channelId: string,
+		userIds: string[],
+	): Promise<Result<void, Error>>;
+	changeDate(
+		channelId: string,
+		isoString: string,
+	): Promise<Result<void, Error>>;
+}
+
+export interface ChannelDatabaseRepositoryInterface {
+	getChannels(): Promise<Result<Channel[], Error>>;
+	getChannelById(channelId: string): Promise<Result<Channel, Error>>;
+	getChannelByUserId(userId: string): Promise<Result<Channel, Error>>;
+	addChannel(channel: Channel): Promise<Result<void, Error>>;
+	updateChannel(
+		channelId: string,
+		fields: Pick<Channel, "channelName" | "day">,
+	): Promise<Result<void, Error>>;
+	deleteChannel(channelId: string): Promise<Result<void, Error>>;
+	registerUsers(
+		channelId: string,
+		userIds: string[],
+	): Promise<Result<void, Error>>;
+	removeUsers(
+		channelId: string,
+		userIds: string[],
 	): Promise<Result<void, Error>>;
 }

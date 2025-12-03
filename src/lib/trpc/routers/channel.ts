@@ -1,26 +1,12 @@
 import { z } from "zod";
-import {
-	addChannel as addChannelFirebase,
-	deleteChannel as deleteChannelFirebase,
-	getChannels,
-	registerUsers as registerUsersFirebase,
-	removeUsers as removeUsersFirebase,
-	updateChannel as updateChannelFirebase,
-} from "@/lib/firebase/channel";
 import { dayEnum } from "@/models/channel";
+import { channelService } from "@/server/application/container";
 import { publicProcedure, router } from "../server";
 
 export const channelRouter = router({
 	// Get all channels
 	getAll: publicProcedure.query(async () => {
-		const getChannelsResult = await getChannels();
-		return getChannelsResult.match(
-			(channels) => channels,
-			(error) => {
-				console.error("Failed to get channels:", error);
-				return [];
-			},
-		);
+		return await channelService.getAllChannels();
 	}),
 
 	// Add a new channel
@@ -34,24 +20,7 @@ export const channelRouter = router({
 			}),
 		)
 		.mutation(async ({ input }) => {
-			const addChannelResult = await addChannelFirebase(input);
-			return addChannelResult.match<{
-				success: boolean;
-				error?: string;
-			}>(
-				(channel) => {
-					return {
-						success: true,
-					};
-				},
-				(error) => {
-					console.error("Failed to add channel:", error);
-					return {
-						success: false,
-						error: error.message,
-					};
-				},
-			);
+			return await channelService.addChannel(input);
 		}),
 
 	// update Channe;
@@ -64,27 +33,7 @@ export const channelRouter = router({
 			}),
 		)
 		.mutation(async ({ input }) => {
-			const updateChannelResult = await updateChannelFirebase(input.channelId, {
-				channelName: input.channelName,
-				day: input.day,
-			});
-			return updateChannelResult.match<{
-				success: boolean;
-				error?: string;
-			}>(
-				() => {
-					return {
-						success: true,
-					};
-				},
-				(error) => {
-					console.error("Failed to update channel:", error);
-					return {
-						success: false,
-						error: error.message,
-					};
-				},
-			);
+			return await channelService.updateChannel(input);
 		}),
 
 	// delete Channel
@@ -95,24 +44,7 @@ export const channelRouter = router({
 			}),
 		)
 		.mutation(async ({ input }) => {
-			const deleteChannelResult = await deleteChannelFirebase(input.channelId);
-			return deleteChannelResult.match<{
-				success: boolean;
-				error?: string;
-			}>(
-				() => {
-					return {
-						success: true,
-					};
-				},
-				(error) => {
-					console.error("Failed to delete channel:", error);
-					return {
-						success: false,
-						error: error.message,
-					};
-				},
-			);
+			return await channelService.deleteChannel(input.channelId);
 		}),
 
 	// Register users to a channel
@@ -124,27 +56,7 @@ export const channelRouter = router({
 			}),
 		)
 		.mutation(async ({ input }) => {
-			const registerUsersResult = await registerUsersFirebase(
-				input.channelId,
-				input.userIds,
-			);
-			return registerUsersResult.match<{
-				success: boolean;
-				error?: string;
-			}>(
-				(channel) => {
-					return {
-						success: true,
-					};
-				},
-				(error) => {
-					console.error("Failed to register users:", error);
-					return {
-						success: false,
-						error: error.message,
-					};
-				},
-			);
+			return await channelService.registerUsers(input.channelId, input.userIds);
 		}),
 
 	removeUsers: publicProcedure
@@ -155,26 +67,6 @@ export const channelRouter = router({
 			}),
 		)
 		.mutation(async ({ input }) => {
-			const removeUsersResult = await removeUsersFirebase(
-				input.channelId,
-				input.userIds,
-			);
-			return removeUsersResult.match<{
-				success: boolean;
-				error?: string;
-			}>(
-				(channel) => {
-					return {
-						success: true,
-					};
-				},
-				(error) => {
-					console.error("Failed to remove users:", error);
-					return {
-						success: false,
-						error: error.message,
-					};
-				},
-			);
+			return await channelService.removeUsers(input.channelId, input.userIds);
 		}),
 });

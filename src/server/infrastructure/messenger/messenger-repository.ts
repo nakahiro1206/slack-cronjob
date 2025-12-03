@@ -1,20 +1,15 @@
-import { Result, Ok, Err } from "@/lib/result";
-import { MessengerRepositoryInterface } from "@/server/application/interfaces";
-import type {
-	UserTagsAssignment,
-	ThreadMessage,
-} from "@/server/domain/entities";
 import { WebClient } from "@slack/web-api";
-// import type { PurpleBlock } from "@slack/web-api/dist/response/ConversationsHistoryResponse";
-import { User } from "@/models/user";
+import { Err, Ok, type Result } from "@/lib/result";
+import type { User } from "@/models/user";
+import type { MessengerRepositoryInterface } from "@/server/application/interfaces";
+import type { UserTagsAssignment } from "@/server/domain/entities";
 import {
 	createSlackMessageBlocks,
 	extractMainContent,
 	extractTextFromBlocks,
 	extractTopLeftContent,
-} from "@/lib/slack/schema";
-
-type GetThreadMessagesReturn = ThreadMessage[];
+} from "@/server/infrastructure/messenger/schema";
+import { formatUserAssignment } from "../utils";
 
 export class MessengerRepository implements MessengerRepositoryInterface {
 	private client: WebClient;
@@ -29,52 +24,6 @@ export class MessengerRepository implements MessengerRepositoryInterface {
 			throw new Error("botUserId is undefined");
 		}
 		return botUserId;
-	}
-
-	async getThreadMessages(
-		channelId: string,
-		threadTs: string,
-	): Promise<Result<GetThreadMessagesReturn, Error>> {
-		const botUserId = await this.getBotUserId();
-
-		const { messages } = await this.client.conversations.replies({
-			channel: channelId,
-			ts: threadTs,
-			limit: 50,
-		});
-
-		// Ensure we have messages
-
-		if (!messages) return Err(new Error("No messages found in thread"));
-
-		const result = messages
-			.map((message) => {
-				const ts = message.ts; // can update the 1st message with this!
-				const isBot = !!message.bot_id;
-				if (!message.text) return null;
-
-				// For app mentions, remove the mention prefix
-				// For IM messages, keep the full text
-				let content = message.text;
-				if (!isBot && content.includes(`<@${botUserId}>`)) {
-					content = content.replace(`<@${botUserId}> `, "");
-				}
-
-				const msg: ThreadMessage = {
-					role: isBot ? "assistant" : "user",
-					ts: ts,
-					isBot: isBot,
-					appId: message.app_id,
-					user: message.user,
-					botId: isBot ? message.bot_id : undefined,
-					text: message.text,
-					blocks: message.blocks,
-				};
-				return msg;
-			})
-			.filter((msg) => msg !== null);
-
-		return Ok(result);
 	}
 
 	async extractInfoFromThreadMessages(
@@ -144,6 +93,7 @@ export class MessengerRepository implements MessengerRepositoryInterface {
 		userTagsAssignment: UserTagsAssignment,
 		users: User[],
 	): Promise<Result<{ messageTs: string }, Error>> {
+		const formattedUserAssignments = formatUserAssignment(userTagsAssignment);
 		const initialMessage = await this.client.chat.postMessage({
 			channel: channelId,
 			// if you ommit thread_ts, the message will be posted in the channel
@@ -153,7 +103,7 @@ export class MessengerRepository implements MessengerRepositoryInterface {
 					left: title,
 					right: description,
 				},
-				mainContent: userTagsAssignment,
+				mainContent: formattedUserAssignments,
 				bottomContent:
 					"Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
 				users: users,
@@ -176,6 +126,7 @@ export class MessengerRepository implements MessengerRepositoryInterface {
 		userTagsAssignment: UserTagsAssignment,
 		users: User[],
 	): Promise<Result<void, Error>> {
+		const formattedUserAssignments = formatUserAssignment(userTagsAssignment);
 		const updatedMessage = await this.client.chat.update({
 			channel: channelId,
 			ts: timestamp,
@@ -185,7 +136,7 @@ export class MessengerRepository implements MessengerRepositoryInterface {
 					left: title,
 					right: description,
 				},
-				mainContent: userTagsAssignment,
+				mainContent: formattedUserAssignments,
 				bottomContent:
 					"Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
 				users: users,

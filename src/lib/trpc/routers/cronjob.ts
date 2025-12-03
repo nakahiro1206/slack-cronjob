@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { notify as notifyService } from "@/lib/slack/notify";
+import { notificationService } from "@/server/application/container";
 import { publicProcedure, router } from "../server";
 
 export const cronjobRouter = router({
@@ -16,11 +16,9 @@ export const cronjobRouter = router({
 			}),
 		)
 		.mutation(async ({ input }) => {
-			const notifyResult = await notifyService({
-				mode: "specifiedChannels",
-				channelIds: input.channelIds || [],
-				updateSlot: false, //  In test mode, do not update slots
-			});
+			const notifyResult = await notificationService.notifyToSpecifiedChannels(
+				input.channelIds || [],
+			);
 			return {
 				success: notifyResult.success,
 				message: notifyResult.message,

@@ -1,12 +1,5 @@
 import React, { type FC, useState } from "react";
 import { toast } from "sonner";
-import { trpc } from "@/lib/trpc/client";
-import type { UpcomingSlot } from "@/models/channel";
-import type { User } from "@/models/user";
-import { Button } from "../../ui/button";
-import { Card } from "../../ui/card";
-import { Spinner } from "../../ui/spinner";
-import { UpcomingCard } from "./UpcomingCard";
 import {
 	Carousel,
 	CarouselContent,
@@ -14,7 +7,14 @@ import {
 	CarouselNext,
 	CarouselPrevious,
 } from "@/components/ui/carousel";
+import { trpc } from "@/lib/trpc/client";
 import { useMobile } from "@/lib/useMobile";
+import type { UpcomingSlot } from "@/models/channel";
+import type { User } from "@/models/user";
+import { Button } from "../../ui/button";
+import { Card } from "../../ui/card";
+import { Spinner } from "../../ui/spinner";
+import { UpcomingCard } from "./UpcomingCard";
 
 type Props = {
 	upcomingSlots: UpcomingSlot[] | undefined;

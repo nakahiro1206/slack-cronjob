@@ -1,37 +1,235 @@
-import { notify } from "@/lib/slack/notify";
-import { removeBotUserIdTag } from "@/lib/slack/utils";
+import { Random } from "random";
 import {
+	getJapanTimeAsObject,
+	isSameDateWithTodayJapanTime,
+	isSameOrBeforeTodayJapanTime,
+} from "@/lib/date";
+import { removeBotUserIdTag } from "@/server/infrastructure/messenger/utils";
+import type { MessageParam } from "../domain/entities";
+import type {
+	ChannelDatabaseRepositoryInterface,
 	LLMRepositoryInterface,
 	MessengerRepositoryInterface,
+	UpcomingSlotDatabaseRepositoryInterface,
+	UserDatabaseRepositoryInterface,
 } from "./interfaces";
-import { getJapanTimeAsObject } from "@/lib/date";
-import { getUsers } from "@/lib/firebase/user";
-import { NewLlmRepository, NewMessengerRepository } from "./di";
 
-export type MessageParam = {
-	role: "user" | "assistant";
-	content: string;
-};
-
-class NotificationService {
+export class NotificationService {
 	constructor(
 		private llmRepository: LLMRepositoryInterface,
 		private messengerRepository: MessengerRepositoryInterface,
+		private userDatabaseRepository: UserDatabaseRepositoryInterface,
+		private upcomingSlotDatabaseRepository: UpcomingSlotDatabaseRepositoryInterface,
+		private channelDatabaseRepository: ChannelDatabaseRepositoryInterface,
 	) {}
 
-	async notifyByCronjob() {
-		// TODO: decouple the complicated inside implementation of this function
-		const notifyResult = await notify({
-			mode: "sameDayOnly",
-			updateSlot: true,
+	async notifyByCronjob(
+		updateSlots: boolean = true,
+	): Promise<{ success: boolean; message?: string }> {
+		const { hour, minute, date, day, month, year } = getJapanTimeAsObject();
+		const description = `*⏰ Created at (UTC+9):*\n ${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} ${day}, ${month} ${date}, ${year}`;
+
+		const rng = new Random(`${new Date().toISOString()}`);
+
+		const usersResult = await this.userDatabaseRepository.getUsers();
+		const users = usersResult.match(
+			(users) => users,
+			(error) => {
+				console.error("Failed to get users:", error);
+				return [];
+			},
+		);
+
+		const channelsResutl = await this.channelDatabaseRepository.getChannels();
+		const channels = channelsResutl.match(
+			(channels) => channels,
+			(error) => {
+				console.error("Failed to get channels:", error);
+				return [];
+			},
+		);
+
+		const upcomingSlotsResult =
+			await this.upcomingSlotDatabaseRepository.getUpcomingSlots();
+		const upcomingSlots = upcomingSlotsResult.match(
+			(slots) => slots,
+			(error) => {
+				console.error("Failed to get upcoming slots:", error);
+				return [];
+			},
+		);
+
+		const targetSlots = upcomingSlots.filter((slot) => {
+			return isSameDateWithTodayJapanTime(slot.date);
 		});
-		return notifyResult;
+
+		if (targetSlots.length === 0) {
+			return {
+				success: false,
+				message: "No target channels for today",
+			};
+		}
+
+		try {
+			await Promise.all(
+				targetSlots.map(async (slot) => {
+					const title = `*📣 1on1 order for ${slot.channelName}* \n This order is for the meeting on ${day}, ${month} ${date}, ${year}.`;
+					const shuffledUserIds = slot.userIds.sort(
+						() => rng.float(0, 1) - 0.5,
+					);
+					const userMentions = shuffledUserIds.map((userId) => `<@${userId}>`);
+					await this.messengerRepository.postMessage(
+						slot.channelId,
+						title,
+						description,
+						{ offline: userMentions, online: [] },
+						users,
+					);
+				}),
+			);
+		} catch (error) {
+			console.error("Failed to notify channels:", error);
+			return {
+				success: false,
+				message: "Failed to notify channels",
+			};
+		}
+
+		// Update slots for next week if needed
+		if (updateSlots === false) {
+			return {
+				success: true,
+				message: "Notifications sent successfully. Skipped slot update.",
+			};
+		}
+
+		const outdatedSlots = upcomingSlots.filter((slot) =>
+			isSameOrBeforeTodayJapanTime(slot.date),
+		);
+		const channelsToReinitialize = channels.filter((channel) =>
+			outdatedSlots.some((slot) => slot.channelId === channel.channelId),
+		);
+
+		// Re-initialize outdated slots
+		const reinitializeResult =
+			await this.upcomingSlotDatabaseRepository.initializeSlotsWithUpcomingDate(
+				channelsToReinitialize,
+			);
+		reinitializeResult.match(
+			() => {},
+			(error) => {
+				console.error("Failed to re-initialize slots:", error);
+			},
+		);
+
+		return {
+			success: true,
+			message: "Notifications sent successfully",
+		};
 	}
 
-	// async notifyBySpecifiedChannels(channelIds: string[]) {
-	//     const notifyResult = await notify({ mode: "specifiedChannels", channelIds, updateSlot: true });
-	//     return notifyResult;
-	// }
+	async notifyToSpecifiedChannels(
+		channelIds: string[],
+		updateSlots: boolean = false,
+	): Promise<{ success: boolean; message?: string }> {
+		const { hour, minute, date, day, month, year } = getJapanTimeAsObject();
+		const description = `*⏰ Created at (UTC+9):*\n ${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} ${day}, ${month} ${date}, ${year}`;
+
+		const rng = new Random(`${new Date().toISOString()}`);
+
+		const usersResult = await this.userDatabaseRepository.getUsers();
+		const users = usersResult.match(
+			(users) => users,
+			(error) => {
+				console.error("Failed to get users:", error);
+				return [];
+			},
+		);
+
+		const channelsResutl = await this.channelDatabaseRepository.getChannels();
+		const channels = channelsResutl.match(
+			(channels) => channels,
+			(error) => {
+				console.error("Failed to get channels:", error);
+				return [];
+			},
+		);
+
+		const targetChannels = channels.filter((channel) => {
+			return channelIds.includes(channel.channelId);
+		});
+		if (targetChannels.length === 0) {
+			return {
+				success: false,
+				message: "No target channels found",
+			};
+		}
+
+		try {
+			await Promise.all(
+				targetChannels.map(async (channel) => {
+					const title = `*📣 1on1 order for ${channel.channelName}* \n This order is for the meeting on ${day}, ${month} ${date}, ${year}.`;
+					const shuffledUserIds = channel.userIds.sort(
+						() => rng.float(0, 1) - 0.5,
+					);
+					await this.messengerRepository.postMessage(
+						channel.channelId,
+						title,
+						description,
+						{ offline: shuffledUserIds, online: [] },
+						users,
+					);
+				}),
+			);
+		} catch (error) {
+			console.error("Failed to notify channels:", error);
+			return {
+				success: false,
+				message: "Failed to notify channels",
+			};
+		}
+
+		// Update slots for next week if needed
+		if (updateSlots === false) {
+			return {
+				success: true,
+				message: "Notifications sent successfully. Skipped slot update.",
+			};
+		}
+
+		const upcomingSlotsResult =
+			await this.upcomingSlotDatabaseRepository.getUpcomingSlots();
+		const upcomingSlots = upcomingSlotsResult.match(
+			(slots) => slots,
+			(error) => {
+				console.error("Failed to get upcoming slots:", error);
+				return [];
+			},
+		);
+		const outdatedSlots = upcomingSlots.filter((slot) =>
+			isSameOrBeforeTodayJapanTime(slot.date),
+		);
+		const channelsToReinitialize = channels.filter((channel) =>
+			outdatedSlots.some((slot) => slot.channelId === channel.channelId),
+		);
+
+		// Re-initialize outdated slots
+		const reinitializeResult =
+			await this.upcomingSlotDatabaseRepository.initializeSlotsWithUpcomingDate(
+				channelsToReinitialize,
+			);
+		reinitializeResult.match(
+			() => {},
+			(error) => {
+				console.error("Failed to re-initialize slots:", error);
+			},
+		);
+
+		return {
+			success: true,
+			message: "Notifications sent successfully",
+		};
+	}
 
 	async notifyNewMessageToChannel(
 		channel: string,
@@ -62,7 +260,7 @@ class NotificationService {
 			},
 		);
 
-		const usersResult = await getUsers();
+		const usersResult = await this.userDatabaseRepository.getUsers();
 		const users = usersResult.match(
 			(users) => users,
 			(error) => {
@@ -137,7 +335,7 @@ class NotificationService {
 			[],
 		);
 
-		const usersResult = await getUsers();
+		const usersResult = await this.userDatabaseRepository.getUsers();
 		const users = usersResult.match(
 			(users) => users,
 			(error) => {
@@ -194,9 +392,3 @@ class NotificationService {
 		);
 	}
 }
-
-/** Dependency Injection */
-export const notificationService = new NotificationService(
-	NewLlmRepository(),
-	NewMessengerRepository(),
-);
