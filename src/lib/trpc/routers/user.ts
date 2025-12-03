@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { publicProcedure, router } from "../server";
 import { userService } from "@/server/application/container";
+import { publicProcedure, router } from "../server";
 
 export const userRouter = router({
 	// Get all users

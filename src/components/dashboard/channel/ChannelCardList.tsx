@@ -1,11 +1,5 @@
 import { PlusIcon } from "@heroicons/react/24/solid";
 import React, { type FC } from "react";
-import { dayToNumber } from "@/lib/date";
-import type { Channel } from "@/models/channel";
-import type { User } from "@/models/user";
-import { Button } from "../../ui/button";
-import { Card } from "../../ui/card";
-import { ChannelCard } from "./ChannelCard";
 import {
 	Carousel,
 	CarouselContent,
@@ -13,7 +7,13 @@ import {
 	CarouselNext,
 	CarouselPrevious,
 } from "@/components/ui/carousel";
+import { dayToNumber } from "@/lib/date";
 import { useMobile } from "@/lib/useMobile";
+import type { Channel } from "@/models/channel";
+import type { User } from "@/models/user";
+import { Button } from "../../ui/button";
+import { Card } from "../../ui/card";
+import { ChannelCard } from "./ChannelCard";
 
 type Props = {
 	channels: Channel[] | undefined;

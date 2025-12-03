@@ -1,7 +1,7 @@
-import { User } from "@/models/user";
-import { UserTagsAssignment } from "@/server/domain/entities";
 import type { PurpleBlock } from "@slack/web-api/dist/response/ConversationsHistoryResponse";
 import { z } from "zod";
+import type { User } from "@/models/user";
+import type { UserTagsAssignment } from "@/server/domain/entities";
 
 const linkButtonSchema = z.object({
 	type: z.literal("section"),
@@ -144,7 +144,7 @@ export const createSlackMessageBlocks = (props: {
 				throw new Error(`Invalid user mention format: ${mention}`);
 			}
 		});
-	}
+	};
 	validateMainContent();
 
 	const header = [

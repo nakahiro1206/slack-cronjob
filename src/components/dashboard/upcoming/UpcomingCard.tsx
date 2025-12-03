@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { getJapanTimeAsJSDate, getJapanTimeAsObject } from "@/lib/date";
 import { trpc } from "@/lib/trpc/client";
+import { useMobile } from "@/lib/useMobile";
 import type { UpcomingSlot } from "@/models/channel";
 import type { User } from "@/models/user";
 import { Button } from "../../ui/button";
@@ -32,7 +33,6 @@ import {
 } from "../../ui/table";
 import { UserSelectDialogButton } from "./AddUserDialogButton";
 import { DeleteUpcomingSlotButton } from "./CancelUpcomingDialogButton";
-import { useMobile } from "@/lib/useMobile";
 
 type UpcomingCardProps = {
 	channel: UpcomingSlot;

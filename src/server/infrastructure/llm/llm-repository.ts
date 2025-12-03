@@ -1,29 +1,12 @@
 import { OpenAI } from "openai";
-import { Result, Ok, Err } from "../../../lib/result";
-import { LLMRepositoryInterface } from "../../../server/application/interfaces";
+import { Err, Ok, type Result } from "../../../lib/result";
+import type { LLMRepositoryInterface } from "../../../server/application/interfaces";
 import {
 	type MessageParam,
-	UserTagsAssignmentSchema,
 	type UserTagsAssignment,
+	UserTagsAssignmentSchema,
 } from "../../../server/domain/entities";
-
-export const decorateUserTagIfNeeded = (tag: string): string => {
-	const regex = /<@[\w\d]+>/g;
-	if (tag.match(regex)) {
-		return tag;
-	} else {
-		return `<@${tag}>`;
-	}
-};
-
-export const formatUserAssignment = (assignment: {
-	offline: string[];
-	online: string[];
-}) : UserTagsAssignment => {
-	assignment.offline = assignment.offline.map(decorateUserTagIfNeeded);
-	assignment.online = assignment.online.map(decorateUserTagIfNeeded);
-	return assignment;
-}
+import { formatUserAssignment } from "../../infrastructure/utils";
 
 export class LlmRepository implements LLMRepositoryInterface {
 	private client: OpenAI;
@@ -40,7 +23,7 @@ export class LlmRepository implements LLMRepositoryInterface {
 	): Promise<Result<UserTagsAssignment, Error>> => {
 		const res = await this.client.chat.completions.create({
 			model: "gpt-4o-2024-08-06",
-			messages: new Array<MessageParam>()
+			messages: [] as MessageParam[]
 				.concat([
 					{
 						role: "system",
@@ -70,9 +53,8 @@ export class LlmRepository implements LLMRepositoryInterface {
 							},
 							online: {
 								type: "array",
-								items: {
-									type: "string",
-								},
+								items: 
+									type: "string",,
 							},
 						},
 						required: ["offline", "online"],

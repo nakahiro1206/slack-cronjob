@@ -1,18 +1,19 @@
-import type { User } from "../../domain/entities";
-import { UserDatabaseRepositoryInterface } from "../../application/interfaces";
-import { FirebaseApp, initializeApp } from "firebase/app";
-import { Firestore, getFirestore } from "firebase/firestore";
+import { type FirebaseApp, initializeApp } from "firebase/app";
 import {
 	collection,
 	deleteDoc,
 	doc,
+	type Firestore,
 	getDoc,
 	getDocs,
+	getFirestore,
 	setDoc,
 	updateDoc,
 } from "firebase/firestore";
-import { firebaseConfig } from "./config";
 import { Err, Ok, type Result } from "@/lib/result";
+import type { UserDatabaseRepositoryInterface } from "../../application/interfaces";
+import type { User } from "../../domain/entities";
+import { firebaseConfig } from "./config";
 
 export class UserDatabaseRepository implements UserDatabaseRepositoryInterface {
 	private app: FirebaseApp;

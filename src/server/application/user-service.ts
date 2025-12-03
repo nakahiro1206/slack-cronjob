@@ -1,4 +1,4 @@
-import { UserDatabaseRepositoryInterface } from "./interfaces";
+import type { UserDatabaseRepositoryInterface } from "./interfaces";
 
 export class UserService {
 	constructor(

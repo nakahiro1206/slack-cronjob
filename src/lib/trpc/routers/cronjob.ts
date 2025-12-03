@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { publicProcedure, router } from "../server";
 import { notificationService } from "@/server/application/container";
+import { publicProcedure, router } from "../server";
 
 export const cronjobRouter = router({
 	// Get cronjob secret
@@ -18,7 +18,7 @@ export const cronjobRouter = router({
 		.mutation(async ({ input }) => {
 			const notifyResult = await notificationService.notifyToSpecifiedChannels(
 				input.channelIds || [],
-			)
+			);
 			return {
 				success: notifyResult.success,
 				message: notifyResult.message,

@@ -1,12 +1,20 @@
-import { ChannelDatabaseRepositoryInterface } from "../../application/interfaces";
-import { Result, Ok, Err } from "@/lib/result";
+import { type FirebaseApp, initializeApp } from "firebase/app";
+import {
+	collection,
+	deleteDoc,
+	doc,
+	type Firestore,
+	getDoc,
+	getDocs,
+	getFirestore,
+	setDoc,
+	updateDoc,
+} from "firebase/firestore";
+import { Err, Ok, type Result } from "@/lib/result";
 import type { Channel } from "@/server/domain/entities";
 import { channelSchema } from "@/server/domain/entities";
+import type { ChannelDatabaseRepositoryInterface } from "../../application/interfaces";
 import { firebaseConfig } from "./config";
-import { FirebaseApp, initializeApp } from "firebase/app";
-import { Firestore, getFirestore } from "firebase/firestore";
-import { collection, getDocs } from "firebase/firestore";
-import { doc, getDoc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
 
 export class ChannelDatabaseRepository
 	implements ChannelDatabaseRepositoryInterface

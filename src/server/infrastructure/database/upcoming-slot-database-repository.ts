@@ -1,18 +1,21 @@
-import { UpcomingSlotDatabaseRepositoryInterface } from "@/server/application/interfaces";
-import { firebaseConfig } from "./config";
-import { FirebaseApp, initializeApp } from "firebase/app";
-import { Firestore, getFirestore } from "firebase/firestore";
-import { Result } from "@/lib/result";
-import type { Channel, UpcomingSlot } from "@/server/domain/entities";
-import { collection, getDocs } from "firebase/firestore";
+import { type FirebaseApp, initializeApp } from "firebase/app";
+import {
+	collection,
+	deleteDoc,
+	doc,
+	type Firestore,
+	getDoc,
+	getDocs,
+	getFirestore,
+	setDoc,
+} from "firebase/firestore";
+import { findNextMeetingDate, getJapanTime } from "@/lib/date";
+import type { Result } from "@/lib/result";
 import { Err, Ok } from "@/lib/result";
 import { upcomingSlotSchema } from "@/models/channel";
-import {
-	getJapanTime,
-	findNextMeetingDate,
-	getJapanTimeTomorrow,
-} from "@/lib/date";
-import { doc, setDoc } from "firebase/firestore";
+import type { UpcomingSlotDatabaseRepositoryInterface } from "@/server/application/interfaces";
+import type { Channel, UpcomingSlot } from "@/server/domain/entities";
+import { firebaseConfig } from "./config";
 
 export class UpcomingSlotDatabaseRepository
 	implements UpcomingSlotDatabaseRepositoryInterface
@@ -41,7 +44,7 @@ export class UpcomingSlotDatabaseRepository
 			return Err<UpcomingSlot[], Error>(error as Error);
 		}
 	}
-	async initializeThisWeekSlots(
+	async initializeSlotsWithUpcomingDate(
 		channels: Channel[],
 	): Promise<Result<void, Error>> {
 		const japanNow = getJapanTime();
@@ -65,30 +68,89 @@ export class UpcomingSlotDatabaseRepository
 			return Err<void, Error>(error as Error);
 		}
 	}
-	async initializeNextWeekSlots(
-		channels: Channel[],
-	): Promise<Result<void, Error>> {
-		const japanTomorrow = getJapanTimeTomorrow();
+	async deleteUpcomingSlot(channelId: string): Promise<Result<void, Error>> {
 		try {
-			await Promise.all(
-				channels.map(async (channel) => {
-					const nextMeetingDate = findNextMeetingDate(
-						japanTomorrow,
-						channel.day,
-					);
-					const upcomingSlotRef = doc(
-						collection(this.db, "upcoming"),
-						channel.channelId,
-					);
-					await setDoc(upcomingSlotRef, {
-						...channel,
-						date: nextMeetingDate || "",
-					});
-				}),
-			);
+			const upcomingSlotRef = collection(this.db, "upcoming");
+			const docRef = doc(upcomingSlotRef, channelId);
+			const docSnap = await getDoc(docRef);
+			if (!docSnap.exists()) {
+				return Err(new Error("Upcoming slot not found"));
+			}
+			await deleteDoc(docRef);
 			return Ok(undefined);
 		} catch (error) {
-			console.error(error);
+			return Err<void, Error>(error as Error);
+		}
+	}
+	async changeDate(channelId: string, isoString: string) {
+		try {
+			const upcomingSlotRef = collection(this.db, "upcoming");
+			const docRef = doc(upcomingSlotRef, channelId);
+			const docSnap = await getDoc(docRef);
+			if (!docSnap.exists()) {
+				return Err<void, Error>(new Error("Upcoming slot not found"));
+			}
+			const parsed = upcomingSlotSchema.safeParse(docSnap.data());
+			if (!parsed.success) {
+				return Err<void, Error>(new Error("Invalid upcoming slot data"));
+			}
+			const updatedSlot: UpcomingSlot = {
+				...parsed.data,
+				date: isoString,
+			};
+			await setDoc(docRef, updatedSlot);
+			return Ok(undefined);
+		} catch (error) {
+			return Err<void, Error>(error as Error);
+		}
+	}
+	async registerUsers(channelId: string, userIds: string[]) {
+		try {
+			const upcomingSlotRef = collection(this.db, "upcoming");
+			const docRef = doc(upcomingSlotRef, channelId);
+			const docSnap = await getDoc(docRef);
+			if (!docSnap.exists()) {
+				return Err<void, Error>(new Error("Upcoming slot not found"));
+			}
+			const parsed = upcomingSlotSchema.safeParse(docSnap.data());
+			if (!parsed.success) {
+				return Err<void, Error>(new Error("Invalid upcoming slot data"));
+			}
+			const updatedUsers = Array.from(
+				new Set([...(parsed.data.userIds || []), ...userIds]),
+			);
+			const updatedSlot: UpcomingSlot = {
+				...parsed.data,
+				userIds: updatedUsers,
+			};
+			await setDoc(docRef, updatedSlot);
+			return Ok(undefined);
+		} catch (error) {
+			return Err<void, Error>(error as Error);
+		}
+	}
+	async removeUsers(channelId: string, userIds: string[]) {
+		try {
+			const upcomingSlotRef = collection(this.db, "upcoming");
+			const docRef = doc(upcomingSlotRef, channelId);
+			const docSnap = await getDoc(docRef);
+			if (!docSnap.exists()) {
+				return Err<void, Error>(new Error("Upcoming slot not found"));
+			}
+			const parsed = upcomingSlotSchema.safeParse(docSnap.data());
+			if (!parsed.success) {
+				return Err<void, Error>(new Error("Invalid upcoming slot data"));
+			}
+			const updatedUsers = (parsed.data.userIds || []).filter(
+				(id) => !userIds.includes(id),
+			);
+			const updatedSlot: UpcomingSlot = {
+				...parsed.data,
+				userIds: updatedUsers,
+			};
+			await setDoc(docRef, updatedSlot);
+			return Ok(undefined);
+		} catch (error) {
 			return Err<void, Error>(error as Error);
 		}
 	}

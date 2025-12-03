@@ -19,61 +19,61 @@
 // 	message: string | undefined;
 // };
 
-async function postMessage({
-	slack,
-	channel,
-	hour,
-	minute,
-	day,
-	month,
-	date,
-	year,
-	rng,
-	users,
-}: {
-	slack: WebClient;
-	channel: Channel;
-	hour: number;
-	minute: number;
-	day: string;
-	month: string;
-	date: number;
-	year: number;
-	rng: Random;
-	users: User[];
-}): Promise<{
-	channelName: string;
-	ok: boolean;
-	error?: string;
-}> {
-	// Create user mentions for the channel members
-	const shuffledUserIds = channel.userIds.sort(() => rng.float(0, 1) - 0.5);
-	const userMentions = shuffledUserIds.map((userId) => `<@${userId}>`);
+// async function postMessage({
+// 	slack,
+// 	channel,
+// 	hour,
+// 	minute,
+// 	day,
+// 	month,
+// 	date,
+// 	year,
+// 	rng,
+// 	users,
+// }: {
+// 	slack: WebClient;
+// 	channel: Channel;
+// 	hour: number;
+// 	minute: number;
+// 	day: string;
+// 	month: string;
+// 	date: number;
+// 	year: number;
+// 	rng: Random;
+// 	users: User[];
+// }): Promise<{
+// 	channelName: string;
+// 	ok: boolean;
+// 	error?: string;
+// }> {
+// 	// Create user mentions for the channel members
+// 	const shuffledUserIds = channel.userIds.sort(() => rng.float(0, 1) - 0.5);
+// 	const userMentions = shuffledUserIds.map((userId) => `<@${userId}>`);
 
-	const result = await slack.chat.postMessage({
-		channel: channel.channelId,
-		text: "1on1 order",
-		blocks: createSlackMessageBlocks({
-			top: {
-				// this message is posted in the morning of the day of meeting.
-				left: `*📣 1on1 order for ${channel.channelName}* \n This order is for the meeting on ${day}, ${month} ${date}, ${year}.`,
-				right: `*⏰ Created at (UTC+9):*\n ${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} ${day}, ${month} ${date}, ${year}`,
-			},
-			mainContent: {
-				offline: userMentions,
-				online: [],
-			},
-			bottomContent:
-				"Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
-			users: users,
-		}),
-	});
-	return {
-		channelName: channel.channelName,
-		ok: result.ok,
-		error: result.error,
-	};
-}
+// 	const result = await slack.chat.postMessage({
+// 		channel: channel.channelId,
+// 		text: "1on1 order",
+// 		blocks: createSlackMessageBlocks({
+// 			top: {
+// 				// this message is posted in the morning of the day of meeting.
+// 				left: `*📣 1on1 order for ${channel.channelName}* \n This order is for the meeting on ${day}, ${month} ${date}, ${year}.`,
+// 				right: `*⏰ Created at (UTC+9):*\n ${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} ${day}, ${month} ${date}, ${year}`,
+// 			},
+// 			mainContent: {
+// 				offline: userMentions,
+// 				online: [],
+// 			},
+// 			bottomContent:
+// 				"Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
+// 			users: users,
+// 		}),
+// 	});
+// 	return {
+// 		channelName: channel.channelName,
+// 		ok: result.ok,
+// 		error: result.error,
+// 	};
+// }
 
 // type NotifyArgs = {
 // 	updateSlot: boolean;

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { dayEnum } from "@/models/channel";
-import { publicProcedure, router } from "../server";
 import { channelService } from "@/server/application/container";
+import { publicProcedure, router } from "../server";
 
 export const channelRouter = router({
 	// Get all channels
@@ -56,10 +56,7 @@ export const channelRouter = router({
 			}),
 		)
 		.mutation(async ({ input }) => {
-			return await channelService.registerUsers(
-				input.channelId,
-				input.userIds,
-			);
+			return await channelService.registerUsers(input.channelId, input.userIds);
 		}),
 
 	removeUsers: publicProcedure
@@ -70,9 +67,6 @@ export const channelRouter = router({
 			}),
 		)
 		.mutation(async ({ input }) => {
-			return await channelService.removeUsers(
-				input.channelId,
-				input.userIds,
-			);
+			return await channelService.removeUsers(input.channelId, input.userIds);
 		}),
 });

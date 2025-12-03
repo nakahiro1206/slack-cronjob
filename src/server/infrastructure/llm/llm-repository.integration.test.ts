@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 
-import { describe, it, expect, beforeAll } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { LlmRepository } from "./llm-repository";
 
 // We will skip these tests if the API key is not in the environment

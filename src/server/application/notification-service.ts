@@ -1,18 +1,18 @@
-import { removeBotUserIdTag } from "@/lib/slack/utils";
-import {
-	LLMRepositoryInterface,
-	MessengerRepositoryInterface,
-	UserDatabaseRepositoryInterface,
-	UpcomingSlotDatabaseRepositoryInterface,
-	ChannelDatabaseRepositoryInterface,
-} from "./interfaces";
+import { Random } from "random";
 import {
 	getJapanTimeAsObject,
 	isSameDateWithTodayJapanTime,
 	isSameOrBeforeTodayJapanTime,
 } from "@/lib/date";
-import type { MessageParam} from "../domain/entities";
-import { Random } from "random";
+import { removeBotUserIdTag } from "@/server/infrastructure/messenger/utils";
+import type { MessageParam } from "../domain/entities";
+import type {
+	ChannelDatabaseRepositoryInterface,
+	LLMRepositoryInterface,
+	MessengerRepositoryInterface,
+	UpcomingSlotDatabaseRepositoryInterface,
+	UserDatabaseRepositoryInterface,
+} from "./interfaces";
 
 export class NotificationService {
 	constructor(
@@ -77,11 +77,12 @@ export class NotificationService {
 					const shuffledUserIds = slot.userIds.sort(
 						() => rng.float(0, 1) - 0.5,
 					);
+					const userMentions = shuffledUserIds.map((userId) => `<@${userId}>`);
 					await this.messengerRepository.postMessage(
 						slot.channelId,
 						title,
 						description,
-						{ offline: shuffledUserIds, online: [] },
+						{ offline: userMentions, online: [] },
 						users,
 					);
 				}),
@@ -111,7 +112,7 @@ export class NotificationService {
 
 		// Re-initialize outdated slots
 		const reinitializeResult =
-			await this.upcomingSlotDatabaseRepository.initializeThisWeekSlots(
+			await this.upcomingSlotDatabaseRepository.initializeSlotsWithUpcomingDate(
 				channelsToReinitialize,
 			);
 		reinitializeResult.match(
@@ -214,7 +215,7 @@ export class NotificationService {
 
 		// Re-initialize outdated slots
 		const reinitializeResult =
-			await this.upcomingSlotDatabaseRepository.initializeThisWeekSlots(
+			await this.upcomingSlotDatabaseRepository.initializeSlotsWithUpcomingDate(
 				channelsToReinitialize,
 			);
 		reinitializeResult.match(

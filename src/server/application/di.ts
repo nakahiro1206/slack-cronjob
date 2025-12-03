@@ -1,15 +1,15 @@
-import {
-	LLMRepositoryInterface,
-	MessengerRepositoryInterface,
-	UserDatabaseRepositoryInterface,
-	UpcomingSlotDatabaseRepositoryInterface,
-	ChannelDatabaseRepositoryInterface,
-} from "./interfaces";
+import { ChannelDatabaseRepository } from "../infrastructure/database/channel-database-repository";
+import { UpcomingSlotDatabaseRepository } from "../infrastructure/database/upcoming-slot-database-repository";
+import { UserDatabaseRepository } from "../infrastructure/database/user-database-repository";
 import { LlmRepository } from "../infrastructure/llm/llm-repository";
 import { MessengerRepository } from "../infrastructure/messenger/messenger-repository";
-import { UserDatabaseRepository } from "../infrastructure/database/user-database-repository";
-import { UpcomingSlotDatabaseRepository } from "../infrastructure/database/upcoming-slot-database-repository";
-import { ChannelDatabaseRepository } from "../infrastructure/database/channel-database-repository";
+import type {
+	ChannelDatabaseRepositoryInterface,
+	LLMRepositoryInterface,
+	MessengerRepositoryInterface,
+	UpcomingSlotDatabaseRepositoryInterface,
+	UserDatabaseRepositoryInterface,
+} from "./interfaces";
 
 export const NewMessengerRepository = (): MessengerRepositoryInterface => {
 	return new MessengerRepository();

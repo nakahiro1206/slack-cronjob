@@ -1,11 +1,10 @@
-import { Result } from "@/lib/result";
+import type { Result } from "@/lib/result";
 import type {
-	UserTagsAssignment,
-	MessageParam,
-	ThreadMessage,
-	User,
-	UpcomingSlot,
 	Channel,
+	MessageParam,
+	UpcomingSlot,
+	User,
+	UserTagsAssignment,
 } from "../domain/entities";
 
 export interface UserRepositoryInterface {
@@ -21,10 +20,6 @@ export interface LLMRepositoryInterface {
 
 export interface MessengerRepositoryInterface {
 	getBotUserId(): Promise<string>;
-	getThreadMessages(
-		channelId: string,
-		threadTs: string,
-	): Promise<Result<ThreadMessage[], Error>>;
 	extractInfoFromThreadMessages(
 		channelId: string,
 		threadTs: string,
@@ -66,8 +61,22 @@ export interface UserDatabaseRepositoryInterface {
 
 export interface UpcomingSlotDatabaseRepositoryInterface {
 	getUpcomingSlots(): Promise<Result<UpcomingSlot[], Error>>;
-	initializeThisWeekSlots(channels: Channel[]): Promise<Result<void, Error>>;
-	initializeNextWeekSlots(channels: Channel[]): Promise<Result<void, Error>>;
+	initializeSlotsWithUpcomingDate(
+		channels: Channel[],
+	): Promise<Result<void, Error>>;
+	deleteUpcomingSlot(channelId: string): Promise<Result<void, Error>>;
+	registerUsers(
+		channelId: string,
+		userIds: string[],
+	): Promise<Result<void, Error>>;
+	removeUsers(
+		channelId: string,
+		userIds: string[],
+	): Promise<Result<void, Error>>;
+	changeDate(
+		channelId: string,
+		isoString: string,
+	): Promise<Result<void, Error>>;
 }
 
 export interface ChannelDatabaseRepositoryInterface {

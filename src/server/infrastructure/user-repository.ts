@@ -1,4 +1,4 @@
-import { UserRepositoryInterface } from "../application/interfaces";
+import type { UserRepositoryInterface } from "../application/interfaces";
 
 export class UserRepository implements UserRepositoryInterface {
 	async getUsers(): Promise<string[]> {
