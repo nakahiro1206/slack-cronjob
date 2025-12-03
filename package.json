@@ -9,8 +9,8 @@
 		"ngrok:static": "ngrok http 3000 --url=krill-hot-primarily.ngrok-free.app",
 		"ngrok:dynamic": "ngrok http 3000",
 		"format": "npx @biomejs/biome format --write",
-		"lint": "npx @biomejs/biome lint --write",
-		"check": "npx @biomejs/biome check --write",
+		"lint": "npx @biomejs/biome lint",
+		"check": "npx @biomejs/biome check",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"generate": "graphql-code-generator --config ./codegen.ts"

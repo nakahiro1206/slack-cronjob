@@ -23,8 +23,7 @@ export class LlmRepository implements LLMRepositoryInterface {
 	): Promise<Result<UserTagsAssignment, Error>> => {
 		const res = await this.client.chat.completions.create({
 			model: "gpt-4o-2024-08-06",
-			messages: [] as MessageParam[]
-				.concat([
+			messages: new Array<MessageParam>().concat([
 					{
 						role: "system",
 						content: `You are a Slack bot assistant.
@@ -53,8 +52,9 @@ export class LlmRepository implements LLMRepositoryInterface {
 							},
 							online: {
 								type: "array",
-								items: 
-									type: "string",,
+								items: {
+									type: "string",
+								},
 							},
 						},
 						required: ["offline", "online"],
