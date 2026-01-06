@@ -6,7 +6,7 @@ export class UserService {
 	) {}
 
 	getAllUsers = async (): Promise<
-		{ id: string; name: string; huddleUrl: string | undefined }[]
+		{ id: string; name: string; huddleUrl: string | null }[]
 	> => {
 		const result = await this.userDatabaseRepository.getUsers();
 		return result.match(
@@ -26,7 +26,7 @@ export class UserService {
 	addUser = async (input: {
 		id: string;
 		name: string;
-		url?: string | undefined;
+		url: string | null;
 	}): Promise<{ success: boolean }> => {
 		const result = await this.userDatabaseRepository.addUser({
 			userId: input.id,

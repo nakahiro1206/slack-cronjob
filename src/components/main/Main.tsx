@@ -48,6 +48,7 @@ export const MainInternal = () => {
 					users={users.map((user) => ({
 						userId: user.id,
 						userName: user.name,
+						huddleUrl: user.huddleUrl,
 					}))}
 					refetchUpcomingSlots={refetchUpcomingSlots}
 				/>
@@ -60,6 +61,7 @@ export const MainInternal = () => {
 						users={users.map((user) => ({
 							userId: user.id,
 							userName: user.name,
+							huddleUrl: user.huddleUrl,
 						}))}
 						openChannelDialog={openChannelDialog}
 					/>
@@ -70,6 +72,7 @@ export const MainInternal = () => {
 							users.map((user) => ({
 								userId: user.id,
 								userName: user.name,
+								huddleUrl: user.huddleUrl,
 							})) || []
 						}
 						onClose={closeChannelDialog}

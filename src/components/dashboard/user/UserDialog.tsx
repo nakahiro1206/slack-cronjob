@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { trpc } from "@/lib/trpc/client";
-import { userSchema } from "@/models/user";
 
 interface UserDialogProps {
 	isOpen: boolean;
@@ -21,23 +20,16 @@ interface UserDialogProps {
 const useUserDialog = (refetchUsers: () => void, onClose: () => void) => {
 	const [newUserId, setNewUserId] = useState("");
 	const [newUserName, setNewUserName] = useState("");
-	const [userDialogError, setUserDialogError] = useState<string | null>(null);
 	const { mutate: addUserMutation, isPending: addUserLoading } =
 		trpc.user.add.useMutation();
 
 	const handleCreateUser = async () => {
-		setUserDialogError(null);
-		const user = { userId: newUserId, userName: newUserName };
-		const parsed = userSchema.safeParse(user);
-		if (!parsed.success) {
-			setUserDialogError(parsed.error.errors.map((e) => e.message).join(", "));
-			return;
-		}
 
 		addUserMutation(
 			{
 				id: newUserId,
 				name: newUserName,
+				url: null,
 			},
 			{
 				onSuccess: (result) => {
@@ -59,7 +51,6 @@ const useUserDialog = (refetchUsers: () => void, onClose: () => void) => {
 	const handleClose = () => {
 		setNewUserId("");
 		setNewUserName("");
-		setUserDialogError(null);
 		onClose();
 	};
 
@@ -68,7 +59,6 @@ const useUserDialog = (refetchUsers: () => void, onClose: () => void) => {
 		setNewUserId,
 		newUserName,
 		setNewUserName,
-		userDialogError,
 		addUserLoading,
 		handleCreateUser,
 		handleClose,
@@ -85,7 +75,6 @@ export const UserDialog: React.FC<UserDialogProps> = ({
 		setNewUserId,
 		newUserName,
 		setNewUserName,
-		userDialogError,
 		addUserLoading,
 		handleCreateUser,
 		handleClose,
@@ -114,7 +103,6 @@ export const UserDialog: React.FC<UserDialogProps> = ({
 							placeholder="User Name"
 						/>
 					</div>
-					{userDialogError && <p className="text-red-600">{userDialogError}</p>}
 				</div>
 				<DialogFooter className="mt-4">
 					<button

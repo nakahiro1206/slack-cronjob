@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { notificationService } from "@/server/application/container";
+import { revalidatePath } from 'next/cache';
 
 export async function notifyByCronjobPresentation(request: NextRequest) {
 	// Verify the request is from Vercel Cron
@@ -8,6 +9,8 @@ export async function notifyByCronjobPresentation(request: NextRequest) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 	const notifyResult = await notificationService.notifyByCronjob();
+	// Revalidate the route page after notification
+	revalidatePath("/");
 	if (!notifyResult.success) {
 		return NextResponse.json({ error: notifyResult.message }, { status: 500 });
 	} else {

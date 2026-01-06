@@ -14,7 +14,7 @@ export const userRouter = router({
 			z.object({
 				id: z.string(),
 				name: z.string(),
-				url: z.string().or(z.undefined()),
+				url: z.string().nullable(),
 			}),
 		)
 		.mutation(async ({ input }) => {
