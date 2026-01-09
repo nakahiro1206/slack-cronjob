@@ -8,6 +8,10 @@ import {
 } from "../../../server/domain/entities";
 import { formatUserAssignment } from "../../infrastructure/utils";
 
+export const NewLlmRepository = (): LLMRepositoryInterface => {
+	return new LlmRepository();
+}
+
 export class LlmRepository implements LLMRepositoryInterface {
 	private client: OpenAI;
 	constructor() {

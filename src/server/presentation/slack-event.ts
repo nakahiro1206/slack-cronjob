@@ -20,6 +20,10 @@ export async function slackEventPresentation(
 
 	await verifyRequest({ requestType, request, rawBody });
 
+	if (requestType !== "event_callback") {
+		return new Response("Unsupported request type", { status: 400 });
+	}
+
 	try {
 		const botUserId = await getBotId();
 
@@ -60,6 +64,17 @@ export async function slackEventPresentation(
 				),
 			);
 			return new Response("Successfully updated order!", { status: 200 });
+		}
+
+		if (event.type === "user_huddle_changed") {
+			const user = event.user;
+			const userId = user.id;
+			const username = user.name;
+			const isInHuddle = user.profile.huddle_state === "in_a_huddle";
+			console.log(
+				`User huddle changed: ${username} (${userId}) is now ${isInHuddle ? "in a huddle" : "not in a huddle"
+				}`,
+			);
 		}
 
 		// if (event.type === "assistant_thread_started") {

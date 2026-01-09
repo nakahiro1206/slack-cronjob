@@ -15,6 +15,11 @@ import type { UserDatabaseRepositoryInterface } from "../../application/interfac
 import type { User } from "../../domain/entities";
 import { firebaseConfig } from "./config";
 
+export const NewUserDatabaseRepository =
+	(): UserDatabaseRepositoryInterface => {
+		return new UserDatabaseRepository();
+	};
+
 export class UserDatabaseRepository implements UserDatabaseRepositoryInterface {
 	private app: FirebaseApp;
 	private db: Firestore;

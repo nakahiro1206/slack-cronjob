@@ -16,6 +16,10 @@ import { channelSchema } from "@/server/domain/entities";
 import type { ChannelDatabaseRepositoryInterface } from "../../application/interfaces";
 import { firebaseConfig } from "./config";
 
+export const NewChannelDatabaseRepository = (): ChannelDatabaseRepositoryInterface => {
+	return new ChannelDatabaseRepository();
+};
+
 export class ChannelDatabaseRepository
 	implements ChannelDatabaseRepositoryInterface
 {

@@ -17,6 +17,11 @@ import type { UpcomingSlotDatabaseRepositoryInterface } from "@/server/applicati
 import type { Channel, UpcomingSlot } from "@/server/domain/entities";
 import { firebaseConfig } from "./config";
 
+export const NewUpcomingSlotDatabaseRepository =
+	(): UpcomingSlotDatabaseRepositoryInterface => {
+		return new UpcomingSlotDatabaseRepository();
+	};
+
 export class UpcomingSlotDatabaseRepository
 	implements UpcomingSlotDatabaseRepositoryInterface
 {

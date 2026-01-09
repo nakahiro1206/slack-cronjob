@@ -11,6 +11,10 @@ import {
 } from "@/server/infrastructure/messenger/schema";
 import { formatUserAssignment } from "../utils";
 
+export const NewMessengerRepository = (): MessengerRepositoryInterface => {
+	return new MessengerRepository();
+}
+
 export class MessengerRepository implements MessengerRepositoryInterface {
 	private client: WebClient;
 	constructor() {
