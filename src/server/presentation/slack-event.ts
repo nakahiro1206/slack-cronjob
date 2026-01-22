@@ -1,32 +1,38 @@
 import type { SlackEvent } from "@slack/web-api";
 import { waitUntil } from "@vercel/functions";
 import { notificationService } from "@/server/application/container";
-import {
-	getBotId,
-	verifyRequest,
-} from "@/server/infrastructure/messenger/utils";
+import { slackAuthMiddleWare } from "./slack-auth-middleware";
 
 export async function slackEventPresentation(
 	request: Request,
 ): Promise<Response> {
 	const rawBody = await request.text();
 	const payload = JSON.parse(rawBody);
-	const requestType = payload.type as "url_verification" | "event_callback";
+	const requestType = payload.type; //  as "url_verification" | "event_callback";
 
 	// See https://api.slack.com/events/url_verification
 	if (requestType === "url_verification") {
 		return new Response(payload.challenge, { status: 200 });
 	}
 
-	await verifyRequest({ requestType, request, rawBody });
-
 	if (requestType !== "event_callback") {
-		return new Response("Unsupported request type", { status: 400 });
+        return new Response("Invalid request", { status: 400 });
+    }
+
+	// verify
+	const verified = slackAuthMiddleWare.verifyRequest({ request, rawBody });
+	if (!verified) {
+		return new Response("Unauthorized", { status: 401 });
 	}
 
-	try {
-		const botUserId = await getBotId();
+	const botIdResult = await slackAuthMiddleWare.getBotId();
+	if (botIdResult.isErr()) {
+		console.error("Failed to get bot user ID:", botIdResult.error);
+		return new Response(`Failed to get bot user ID`, { status: 500 });
+	}
+	const botUserId = botIdResult.unwrap();
 
+	try {
 		const event = payload.event as SlackEvent;
 
 		if (event.type === "app_mention") {

@@ -22,7 +22,7 @@ export const NewUpcomingSlotDatabaseRepository =
 		return new UpcomingSlotDatabaseRepository();
 	};
 
-export class UpcomingSlotDatabaseRepository
+class UpcomingSlotDatabaseRepository
 	implements UpcomingSlotDatabaseRepositoryInterface
 {
 	private app: FirebaseApp;

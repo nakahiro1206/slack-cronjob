@@ -10,7 +10,7 @@ import { UserCard } from "../dashboard/user/UserCard";
 import { UserDialog } from "../dashboard/user/UserDialog";
 import { Spinner } from "../ui/spinner";
 
-export const MainInternal = () => {
+const MainInternal = () => {
 	const [
 		upcomingSlots,
 		{ error: upcomingSlotsError, refetch: refetchUpcomingSlots },

@@ -114,3 +114,9 @@ export const isSameOrBeforeTodayJapanTime = (
 	const todayJapanTime = getJapanTime();
 	return targetJapanTime.startOf("day") <= todayJapanTime.startOf("day");
 };
+
+export const isFutureDateJapanTime = (targetISOString: string): boolean => {
+	const targetJapanTime = getJapanTime(targetISOString);
+	const nowJapanTime = getJapanTime();
+	return targetJapanTime.startOf("day") > nowJapanTime.startOf("day");
+}

@@ -20,7 +20,7 @@ export const NewChannelDatabaseRepository = (): ChannelDatabaseRepositoryInterfa
 	return new ChannelDatabaseRepository();
 };
 
-export class ChannelDatabaseRepository
+class ChannelDatabaseRepository
 	implements ChannelDatabaseRepositoryInterface
 {
 	private app: FirebaseApp;

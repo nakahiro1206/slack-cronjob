@@ -15,7 +15,7 @@ export const NewMessengerRepository = (): MessengerRepositoryInterface => {
 	return new MessengerRepository();
 }
 
-export class MessengerRepository implements MessengerRepositoryInterface {
+class MessengerRepository implements MessengerRepositoryInterface {
 	private client: WebClient;
 	constructor() {
 		this.client = new WebClient(process.env.SLACK_BOT_TOKEN);

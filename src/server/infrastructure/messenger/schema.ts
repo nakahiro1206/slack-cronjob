@@ -22,13 +22,13 @@ const linkButtonSchema = z.object({
 	}),
 });
 
-export type LinkButtonBlock = z.infer<typeof linkButtonSchema>;
+type LinkButtonBlock = z.infer<typeof linkButtonSchema>;
 
 export const dividerBlock = z.object({
 	type: z.literal("divider"),
 });
 
-export type DividerBlock = z.infer<typeof dividerBlock>;
+type DividerBlock = z.infer<typeof dividerBlock>;
 
 const HeaderBlockSchema = z.object({
 	type: z.literal("header"),
@@ -38,8 +38,6 @@ const HeaderBlockSchema = z.object({
 		emoji: z.boolean(),
 	}),
 });
-
-export type HeaderBlock = z.infer<typeof HeaderBlockSchema>;
 
 // get user ids
 export const extractMainContent = (

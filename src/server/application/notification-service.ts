@@ -2,9 +2,9 @@ import { Random } from "random";
 import {
 	getJapanTimeAsObject,
 	isSameDateWithTodayJapanTime,
-	isSameOrBeforeTodayJapanTime,
+	isFutureDateJapanTime
 } from "@/lib/date";
-import { removeBotUserIdTag } from "@/server/infrastructure/messenger/utils";
+import { removeBotUserIdTag } from "@/server/infrastructure/utils";
 import type { MessageParam } from "../domain/entities";
 import type {
 	ChannelDatabaseRepositoryInterface,
@@ -63,13 +63,6 @@ export class NotificationService {
 			return isSameDateWithTodayJapanTime(slot.date);
 		});
 
-		if (targetSlots.length === 0) {
-			return {
-				success: false,
-				message: "No target channels for today",
-			};
-		}
-
 		try {
 			await Promise.all(
 				targetSlots.map(async (slot) => {
@@ -103,11 +96,12 @@ export class NotificationService {
 			};
 		}
 
-		const outdatedSlots = upcomingSlots.filter((slot) =>
-			isSameOrBeforeTodayJapanTime(slot.date),
+		const futureUpcomingSlots = upcomingSlots.filter((slot) =>
+			isFutureDateJapanTime(slot.date),
 		);
 		const channelsToReinitialize = channels.filter((channel) =>
-			outdatedSlots.some((slot) => slot.channelId === channel.channelId),
+			// not in futureUpcomingSlots
+			!futureUpcomingSlots.some((slot) => slot.channelId === channel.channelId)
 		);
 
 		// Re-initialize outdated slots
@@ -158,12 +152,6 @@ export class NotificationService {
 		const targetChannels = channels.filter((channel) => {
 			return channelIds.includes(channel.channelId);
 		});
-		if (targetChannels.length === 0) {
-			return {
-				success: false,
-				message: "No target channels found",
-			};
-		}
 
 		try {
 			await Promise.all(
@@ -206,11 +194,12 @@ export class NotificationService {
 				return [];
 			},
 		);
-		const outdatedSlots = upcomingSlots.filter((slot) =>
-			isSameOrBeforeTodayJapanTime(slot.date),
+		const futureUpcomingSlots = upcomingSlots.filter((slot) =>
+			isFutureDateJapanTime(slot.date),
 		);
 		const channelsToReinitialize = channels.filter((channel) =>
-			outdatedSlots.some((slot) => slot.channelId === channel.channelId),
+			// not in futureUpcomingSlots
+			!futureUpcomingSlots.some((slot) => slot.channelId === channel.channelId)
 		);
 
 		// Re-initialize outdated slots

@@ -7,10 +7,6 @@ import type {
 	UserTagsAssignment,
 } from "../domain/entities";
 
-export interface UserRepositoryInterface {
-	getUsers(): Promise<string[]>;
-}
-
 export interface LLMRepositoryInterface {
 	generateResponse(
 		messages: MessageParam[],

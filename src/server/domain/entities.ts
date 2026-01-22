@@ -21,7 +21,6 @@ export const dayEnum = z.enum([
 	"TUESDAY",
 	"WEDNESDAY",
 ]);
-export type DayEnum = z.infer<typeof dayEnum>;
 
 export const channelSchema = z.object({
 	channelId: z.string().min(1),

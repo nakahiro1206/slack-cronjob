@@ -20,7 +20,7 @@ export const NewUserDatabaseRepository =
 		return new UserDatabaseRepository();
 	};
 
-export class UserDatabaseRepository implements UserDatabaseRepositoryInterface {
+class UserDatabaseRepository implements UserDatabaseRepositoryInterface {
 	private app: FirebaseApp;
 	private db: Firestore;
 	constructor() {
