@@ -1,44 +1,28 @@
-import { Suspense, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { Suspense } from "react";
 import { Test } from "@/components/test/Test";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { trpc } from "@/lib/trpc/client";
 import { ChannelCardList } from "../dashboard/channel/ChannelCardList";
 import { ChannelDialog } from "../dashboard/channel/CreateChannelDialog";
 import { UpcomingCardList } from "../dashboard/upcoming/UpcomingCardList";
 import { UserCard } from "../dashboard/user/UserCard";
 import { UserDialog } from "../dashboard/user/UserDialog";
 import { Spinner } from "../ui/spinner";
-
+import { useMain } from "./hooks";
 const MainInternal = () => {
-	const [
+	const {
 		upcomingSlots,
-		{ error: upcomingSlotsError, refetch: refetchUpcomingSlots },
-	] = trpc.upcoming.getAll.useSuspenseQuery();
-	const [channels, { error: channelsError, refetch: refetchChannels }] =
-		trpc.channel.getAll.useSuspenseQuery();
-	const [users, { error: usersError, refetch: refetchUsers }] =
-		trpc.user.getAll.useSuspenseQuery();
-
-	// Dialog state
-	const [isChannelDialogOpen, setChannelDialogOpen] = useState(false);
-	const [isUserDialogOpen, setUserDialogOpen] = useState(false);
-	// Create Channel Dialog
-	const openChannelDialog = () => {
-		setChannelDialogOpen(true);
-	};
-	const closeChannelDialog = () => setChannelDialogOpen(false);
-	// Create User Dialog
-	const openUserDialog = () => {
-		setUserDialogOpen(true);
-	};
-	const closeUserDialog = () => setUserDialogOpen(false);
-
-	useEffect(() => {
-		if (channelsError) toast.error(channelsError.message);
-		if (usersError) toast.error(usersError.message);
-		if (upcomingSlotsError) toast.error(upcomingSlotsError.message);
-	}, [channelsError, usersError, upcomingSlotsError]);
+		users,
+		channels,
+		refetchUpcomingSlots,
+		refetchChannels,
+		refetchUsers,
+		isChannelDialogOpen,
+		openChannelDialog,
+		closeChannelDialog,
+		isUserDialogOpen,
+		openUserDialog,
+		closeUserDialog,
+	} = useMain();
 
 	return (
 		<>
@@ -54,53 +38,49 @@ const MainInternal = () => {
 				/>
 			</TabsContent>
 			<TabsContent value="channels">
-				<>
-					<ChannelCardList
-						refetchChannels={refetchChannels}
-						channels={channels}
-						users={users.map((user) => ({
+				<ChannelCardList
+					refetchChannels={refetchChannels}
+					channels={channels}
+					users={users.map((user) => ({
+						userId: user.id,
+						userName: user.name,
+						huddleUrl: user.huddleUrl,
+					}))}
+					openChannelDialog={openChannelDialog}
+				/>
+				{/* Channel Dialog */}
+				<ChannelDialog
+					isOpen={isChannelDialogOpen}
+					users={
+						users.map((user) => ({
 							userId: user.id,
 							userName: user.name,
 							huddleUrl: user.huddleUrl,
-						}))}
-						openChannelDialog={openChannelDialog}
-					/>
-					{/* Channel Dialog */}
-					<ChannelDialog
-						isOpen={isChannelDialogOpen}
-						users={
-							users.map((user) => ({
-								userId: user.id,
-								userName: user.name,
-								huddleUrl: user.huddleUrl,
-							})) || []
-						}
-						onClose={closeChannelDialog}
-						refetchChannels={refetchChannels}
-					/>
-				</>
+						})) || []
+					}
+					onClose={closeChannelDialog}
+					refetchChannels={refetchChannels}
+				/>
 			</TabsContent>
 
 			<TabsContent value="users">
-				<>
-					<UserCard
-						users={
-							users.map((user) => ({
-								userId: user.id,
-								userName: user.name,
-								huddleUrl: user.huddleUrl,
-							})) || []
-						}
-						openUserDialog={openUserDialog}
-						refetchUsers={refetchUsers}
-					/>
-					{/* User Dialog */}
-					<UserDialog
-						isOpen={isUserDialogOpen}
-						onClose={closeUserDialog}
-						refetchUsers={refetchUsers}
-					/>
-				</>
+				<UserCard
+					users={
+						users.map((user) => ({
+							userId: user.id,
+							userName: user.name,
+							huddleUrl: user.huddleUrl,
+						})) || []
+					}
+					openUserDialog={openUserDialog}
+					refetchUsers={refetchUsers}
+				/>
+				{/* User Dialog */}
+				<UserDialog
+					isOpen={isUserDialogOpen}
+					onClose={closeUserDialog}
+					refetchUsers={refetchUsers}
+				/>
 			</TabsContent>
 			<TabsContent value="test">
 				<Test refetchUpcomingSlots={refetchUpcomingSlots} />

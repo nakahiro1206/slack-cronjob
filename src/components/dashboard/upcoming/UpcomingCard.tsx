@@ -1,19 +1,11 @@
 import {
 	PencilIcon,
-	QuestionMarkCircleIcon,
-	UserCircleIcon,
 } from "@heroicons/react/24/outline";
-import React, { useState } from "react";
-import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { getJapanTimeAsJSDate, getJapanTimeAsObject } from "@/lib/date";
-import { trpc } from "@/lib/trpc/client";
-import { useMobile } from "@/lib/useMobile";
-import type { UpcomingSlot } from "@/models/channel";
-import type { User } from "@/models/user";
+import type { UpcomingSlot } from "@/types/upcoming-slot";
+import type { User } from "@/types/user";
 import { Button } from "../../ui/button";
 import { Card } from "../../ui/card";
-import { Checkbox } from "../../ui/checkbox";
 import { DatePicker } from "../../ui/date-picker";
 import {
 	Dialog,
@@ -27,150 +19,142 @@ import {
 	Table,
 	TableBody,
 	TableCell,
-	TableHead,
-	TableHeader,
 	TableRow,
 } from "../../ui/table";
 import { UserSelectDialogButton } from "./AddUserDialogButton";
 import { DeleteUpcomingSlotButton } from "./CancelUpcomingDialogButton";
+import { useUpcomingCard } from "./upcomingCard.hooks";
+import {
+	DndContext,
+	closestCorners, // Better for multi-container
+	DragOverlay,
+	type UniqueIdentifier,
+} from "@dnd-kit/core";
+import {
+	SortableContext,
+	verticalListSortingStrategy,
+	useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import type { UserEntry, UserAssignment } from "./upcomingCard.hooks";
 
 type UpcomingCardProps = {
 	channel: UpcomingSlot;
 	users: User[] | undefined;
-	refetchChannels: () => void;
+	refetchUpcomingSlots: () => void;
 };
+
+const TableContainer = ({
+	id,
+	title,
+	items,
+}: {
+	id: keyof UserAssignment;
+	title: string;
+	items: UserEntry[];
+}) => {
+	return (
+		<div className="border rounded-lg p-4 bg-slate-50">
+			<h2 className="font-bold mb-4">{title}</h2>
+			<SortableContext
+				id={id}
+				items={items}
+				strategy={verticalListSortingStrategy}
+			>
+				<Table className="bg-white">
+					<TableBody ref={null}>
+						{items.map((item) => (
+							<SortableRow key={item.id} id={item.id} item={item} />
+						))}
+						{items.length === 0 && (
+							<TableRow>
+								<TableCell className="text-center text-muted-foreground h-20">
+									Drop items here
+								</TableCell>
+							</TableRow>
+						)}
+					</TableBody>
+				</Table>
+			</SortableContext>
+		</div>
+	);
+};
+
+const SortableRow = ({
+	id,
+	item,
+}: {
+	id: UniqueIdentifier;
+	item: UserEntry;
+}) => {
+	const {
+		attributes,
+		listeners,
+		setNodeRef,
+		transform,
+		transition,
+		isDragging,
+	} = useSortable({ id });
+	const style = {
+		transform: CSS.Translate.toString(transform),
+		transition,
+		opacity: isDragging ? 0.3 : 1,
+	};
+
+	return (
+		<TableRow ref={setNodeRef} style={style} {...attributes} {...listeners}>
+			<TableCell className="font-medium">{item.userId}</TableCell>
+			<TableCell>{item.userId}</TableCell>
+		</TableRow>
+	);
+};
+
 export const UpcomingCard = ({
 	channel,
 	users,
-	refetchChannels,
+	refetchUpcomingSlots,
 }: UpcomingCardProps) => {
-	const [isHandlingRemoveUsers, setIsHandlingRemoveUsers] = useState(false);
-	const [selectedRemoveUserIds, setSelectedRemoveUserIds] = useState<string[]>(
-		[],
-	);
-	const [isDateDialogOpen, setIsDateDialogOpen] = useState(false);
-
-	const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-		getJapanTimeAsJSDate(channel.date),
-	);
-	const { mutate: removeUsersMutation, isPending: loadingRemoveUsersMutation } =
-		trpc.upcoming.removeUsers.useMutation();
-	const { mutate: changeDateMutation, isPending: loadingChangeDateMutation } =
-		trpc.upcoming.changeDate.useMutation();
 	const {
-		mutate: deleteUpcomingSlotMutation,
-		isPending: loadingDeleteUpcomingSlotMutation,
-	} = trpc.upcoming.delete.useMutation();
-
-	const startHandlingRemoveUsers = (channelId: string) => {
-		setIsHandlingRemoveUsers(true);
-		setSelectedRemoveUserIds([]);
-	};
-
-	const endHandlingRemoveUsers = () => {
-		setIsHandlingRemoveUsers(false);
-		setSelectedRemoveUserIds([]);
-	};
-
-	const toggleSelectedRemoveUser = (userId: string) => {
-		if (selectedRemoveUserIds.includes(userId)) {
-			setSelectedRemoveUserIds(
-				selectedRemoveUserIds.filter((id) => id !== userId),
-			);
-		} else {
-			setSelectedRemoveUserIds([...selectedRemoveUserIds, userId]);
-		}
-	};
-
-	const executeRemoveUsers = () => {
-		if (selectedRemoveUserIds.length === 0) {
-			toast.error("No users selected");
-			return;
-		}
-		removeUsersMutation(
-			{ channelId: channel.channelId, userIds: selectedRemoveUserIds },
-			{
-				onSuccess: (result) => {
-					if (result.success) {
-						toast.success("Users removed successfully");
-						refetchChannels();
-						endHandlingRemoveUsers();
-					} else {
-						toast.error("Failed to remove users");
-					}
-				},
-				onError: (error) => {
-					toast.error(error.message);
-					endHandlingRemoveUsers();
-				},
-			},
+		isHandlingRemoveUsers,
+		startHandlingRemoveUsers,
+		endHandlingRemoveUsers,
+		selectedRemoveUserIds,
+		toggleSelectedRemoveUser,
+		executeRemoveUsers,
+		isDateDialogOpen,
+		setIsDateDialogOpen,
+		openDateDialog,
+		closeDateDialog,
+		selectedDate,
+		setSelectedDate,
+		executeDateChange,
+		handleDeleteUpcomingSlot,
+		loadingRemoveUsersMutation,
+		loadingChangeDateMutation,
+		loadingDeleteUpcomingSlotMutation,
+		isMobile,
+		dateObj,
+		userAssignment,
+		activeId,
+		sensors,
+		handleDragOver,
+		handleDragEnd,
+		setActiveId,
+	} = useUpcomingCard({
+		channel,
+		refetchUpcomingSlots,
+	});
+	const { year, month, date, day } = dateObj;
+	const isInSlot = (userId: string) => {
+		return (
+			channel.onlineUserIds.includes(userId) ||
+			channel.offlineUserIds.includes(userId)
 		);
 	};
-
-	const executeDateChange = () => {
-		if (!selectedDate) {
-			toast.error("Please select a date");
-			return;
-		}
-		changeDateMutation(
-			{
-				channelId: channel.channelId,
-				date: selectedDate.toISOString(),
-			},
-			{
-				onSuccess: (result) => {
-					if (result.success) {
-						toast.success("Date changed successfully");
-						refetchChannels();
-						setIsDateDialogOpen(false);
-					} else {
-						toast.error("Failed to change date");
-					}
-				},
-				onError: (error) => {
-					toast.error(error.message);
-					setIsDateDialogOpen(false);
-				},
-			},
-		);
-	};
-
-	const openDateDialog = () => {
-		setSelectedDate(getJapanTimeAsJSDate(channel.date));
-		setIsDateDialogOpen(true);
-	};
-
-	const closeDateDialog = () => {
-		setIsDateDialogOpen(false);
-		setSelectedDate(getJapanTimeAsJSDate(channel.date));
-	};
-
-	const handleDeleteUpcomingSlot = () => {
-		deleteUpcomingSlotMutation(
-			{ channelId: channel.channelId },
-			{
-				onSuccess: (result) => {
-					if (result.success) {
-						toast.success("Upcoming slot deleted successfully");
-						refetchChannels();
-					} else {
-						toast.error("Failed to delete upcoming slot");
-					}
-				},
-				onError: (error) => {
-					toast.error(error.message);
-				},
-			},
-		);
-	};
-
-	const { isMobile } = useMobile();
-
-	const { day, date, month, year } = getJapanTimeAsObject(channel.date);
 	return (
 		<>
 			<Card key={channel.channelId} className="p-4">
-				{isMobile === false && (
+				{isMobile === false ? (
 					<div className="w-full flex justify-between">
 						<div className="flex flex-col gap-2">
 							<div className="flex flex-row items-center gap-2">
@@ -201,11 +185,9 @@ export const UpcomingCard = ({
 							<UserSelectDialogButton
 								channelId={channel.channelId}
 								unregisteredUsers={
-									users?.filter(
-										(user) => !channel.userIds.includes(user.userId),
-									) || []
+									users?.filter((user) => !isInSlot(user.userId)) || []
 								}
-								refetchChannels={refetchChannels}
+								refetchChannels={refetchUpcomingSlots}
 							/>
 
 							{isHandlingRemoveUsers ? (
@@ -234,8 +216,7 @@ export const UpcomingCard = ({
 							)}
 						</div>
 					</div>
-				)}
-				{isMobile && (
+				) : (
 					<div className="w-full">
 						<div className="flex flex-row items-center gap-2">
 							<div className="text-xl font-semibold">{channel.channelName}</div>
@@ -262,11 +243,9 @@ export const UpcomingCard = ({
 							<UserSelectDialogButton
 								channelId={channel.channelId}
 								unregisteredUsers={
-									users?.filter(
-										(user) => !channel.userIds.includes(user.userId),
-									) || []
+									users?.filter((user) => !isInSlot(user.userId)) || []
 								}
-								refetchChannels={refetchChannels}
+								refetchChannels={refetchUpcomingSlots}
 							/>
 
 							{isHandlingRemoveUsers ? (
@@ -296,7 +275,37 @@ export const UpcomingCard = ({
 						</div>
 					</div>
 				)}
-				<Table>
+
+				<div className="p-10 space-y-10">
+					<DndContext
+						sensors={sensors}
+						collisionDetection={closestCorners} // Use corners for better detection
+						onDragStart={({ active }) => setActiveId(active.id)}
+						onDragOver={handleDragOver}
+						onDragEnd={handleDragEnd}
+					>
+						<TableContainer
+							id="online"
+							title="Online"
+							items={userAssignment.online}
+						/>
+						<TableContainer
+							id="offline"
+							title="Offline"
+							items={userAssignment.offline}
+						/>
+
+						{/* Optional: Smooth dragging visuals */}
+						<DragOverlay>
+							{activeId ? (
+								<div className="bg-white border p-4 shadow-lg rounded w-full opacity-80">
+									Dragging Item...
+								</div>
+							) : null}
+						</DragOverlay>
+					</DndContext>
+				</div>
+				{/* <Table>
 					<TableHeader>
 						<TableRow>
 							<TableHead className="w-2/3">Name</TableHead>
@@ -304,11 +313,41 @@ export const UpcomingCard = ({
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{channel.userIds.map((userId) => {
+						{channel.onlineUserIds.map((userId) => {
 							const user = users?.find((u) => u.userId === userId);
 							return (
 								<TableRow key={userId}>
+									<TableCell className="bg-red-50">
+										{user ? (
+											<div className="flex items-center gap-2">
+												<UserCircleIcon className="h-4 w-4" />
+												{user.userName}
+											</div>
+										) : (
+											<div className="flex items-center gap-2">
+												<QuestionMarkCircleIcon className="h-4 w-4" />
+												No user found
+											</div>
+										)}
+									</TableCell>
 									<TableCell>
+										{isHandlingRemoveUsers ? (
+											<Checkbox
+												checked={selectedRemoveUserIds.includes(userId)}
+												onCheckedChange={() => toggleSelectedRemoveUser(userId)}
+											/>
+										) : (
+											" "
+										)}
+									</TableCell>
+								</TableRow>
+							);
+						})}
+            {channel.offlineUserIds.map((userId) => {
+							const user = users?.find((u) => u.userId === userId);
+							return (
+								<TableRow key={userId}>
+									<TableCell className="bg-blue-50">
 										{user ? (
 											<div className="flex items-center gap-2">
 												<UserCircleIcon className="h-4 w-4" />
@@ -335,7 +374,7 @@ export const UpcomingCard = ({
 							);
 						})}
 					</TableBody>
-				</Table>
+				</Table> */}
 			</Card>
 
 			{/* Date Edit Dialog */}

@@ -18,10 +18,10 @@ export const channelSchema = z.object({
 	day: dayEnum,
 });
 
-export const upcomingSlotSchema = z.object({
-	...channelSchema.shape,
-	date: z.string().min(1),
-});
+// export const upcomingSlotSchema = z.object({
+// 	...channelSchema.shape,
+// 	date: z.string().min(1),
+// });
 
 export type Channel = z.infer<typeof channelSchema>;
-export type UpcomingSlot = z.infer<typeof upcomingSlotSchema>;
+// export type UpcomingSlot = z.infer<typeof upcomingSlotSchema>;

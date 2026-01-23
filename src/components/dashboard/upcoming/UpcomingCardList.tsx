@@ -1,4 +1,4 @@
-import React, { type FC, useState } from "react";
+import type { FC } from "react";
 import { toast } from "sonner";
 import {
 	Carousel,
@@ -9,12 +9,13 @@ import {
 } from "@/components/ui/carousel";
 import { trpc } from "@/lib/trpc/client";
 import { useMobile } from "@/lib/useMobile";
-import type { UpcomingSlot } from "@/models/channel";
-import type { User } from "@/models/user";
+import type { UpcomingSlot } from "@/types/upcoming-slot";
+import type { User } from "@/types/user";
 import { Button } from "../../ui/button";
 import { Card } from "../../ui/card";
 import { Spinner } from "../../ui/spinner";
 import { UpcomingCard } from "./UpcomingCard";
+import Sample from "./sample";
 
 type Props = {
 	upcomingSlots: UpcomingSlot[] | undefined;
@@ -22,9 +23,9 @@ type Props = {
 	refetchUpcomingSlots: () => void;
 };
 export const UpcomingCardList: FC<Props> = ({
-	upcomingSlots: channels,
+	upcomingSlots,
 	users,
-	refetchUpcomingSlots: refetchChannels,
+	refetchUpcomingSlots,
 }) => {
 	const { isMobile } = useMobile();
 	const {
@@ -35,7 +36,7 @@ export const UpcomingCardList: FC<Props> = ({
 	const overrideUpcomingSlots = () => {
 		initializeUpcomingSlotsMutation(undefined, {
 			onSuccess: () => {
-				refetchChannels();
+				refetchUpcomingSlots();
 			},
 			onError: (error) => {
 				toast.error(error.message);
@@ -58,15 +59,17 @@ export const UpcomingCardList: FC<Props> = ({
 			</div>
 			{isMobile === false && (
 				<div className="grid grid-cols-2 gap-4">
-					{channels
+					{/* inject example d&d  */}
+					<Sample />
+					{upcomingSlots
 						?.sort((a, b) => {
 							return a.date.localeCompare(b.date);
 						})
-						.map((channel) => (
+						.map((upcomingSlot) => (
 							<UpcomingCard
-								key={channel.channelId}
-								channel={channel}
-								refetchChannels={refetchChannels}
+								key={upcomingSlot.channelId}
+								channel={upcomingSlot}
+								refetchUpcomingSlots={refetchUpcomingSlots}
 								users={users}
 							/>
 						))}
@@ -75,15 +78,18 @@ export const UpcomingCardList: FC<Props> = ({
 			{isMobile && (
 				<Carousel>
 					<CarouselContent>
-						{channels
+						{upcomingSlots
 							?.sort((a, b) => {
 								return a.date.localeCompare(b.date);
 							})
-							.map((channel) => (
-								<CarouselItem key={channel.channelId} className="w-full px-2">
+							.map((upcomingSlot) => (
+								<CarouselItem
+									key={upcomingSlot.channelId}
+									className="w-full px-2"
+								>
 									<UpcomingCard
-										channel={channel}
-										refetchChannels={refetchChannels}
+										channel={upcomingSlot}
+										refetchUpcomingSlots={refetchUpcomingSlots}
 										users={users}
 									/>
 								</CarouselItem>

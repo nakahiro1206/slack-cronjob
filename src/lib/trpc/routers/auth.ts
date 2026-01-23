@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import { publicProcedure, router } from "../server";
 
@@ -15,7 +15,7 @@ export const authRouter = router({
 					message: "Invalid email",
 				};
 			}
-			const [username, domain] = split;
+			const [_username, domain] = split;
 			const emailSuffix = createHash("sha256").update(domain).digest("hex");
 			if (emailSuffix !== emailSuffixSha) {
 				return {

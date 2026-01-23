@@ -1,6 +1,6 @@
 import { WebClient } from "@slack/web-api";
 import type { PurpleBlock } from "@slack/web-api/dist/response/ConversationsHistoryResponse";
-import crypto from "crypto";
+import crypto from "node:crypto";
 
 const signingSecret = process.env.SLACK_SIGNING_SECRET!;
 
@@ -25,7 +25,7 @@ export async function isValidSlackRequest({
 	}
 
 	// Prevent replay attacks on the order of 5 minutes
-	if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 60 * 5) {
+	if (Math.abs(Date.now() / 1000 - parseInt(timestamp, 10)) > 60 * 5) {
 		console.log("Timestamp out of range");
 		return false;
 	}

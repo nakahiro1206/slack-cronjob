@@ -12,9 +12,12 @@ import {
 import { findNextMeetingDate, getJapanTime } from "@/lib/date";
 import type { Result } from "@/lib/result";
 import { Err, Ok } from "@/lib/result";
-import { upcomingSlotSchema } from "@/models/channel";
 import type { UpcomingSlotDatabaseRepositoryInterface } from "@/server/application/interfaces";
-import type { Channel, UpcomingSlot } from "@/server/domain/entities";
+import {
+	type Channel,
+	type UpcomingSlot,
+	upcomingSlotSchema,
+} from "@/server/domain/entities";
 import { firebaseConfig } from "./config";
 
 export const NewUpcomingSlotDatabaseRepository =

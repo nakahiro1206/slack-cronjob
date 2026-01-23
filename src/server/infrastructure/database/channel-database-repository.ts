@@ -16,13 +16,12 @@ import { channelSchema } from "@/server/domain/entities";
 import type { ChannelDatabaseRepositoryInterface } from "../../application/interfaces";
 import { firebaseConfig } from "./config";
 
-export const NewChannelDatabaseRepository = (): ChannelDatabaseRepositoryInterface => {
-	return new ChannelDatabaseRepository();
-};
+export const NewChannelDatabaseRepository =
+	(): ChannelDatabaseRepositoryInterface => {
+		return new ChannelDatabaseRepository();
+	};
 
-class ChannelDatabaseRepository
-	implements ChannelDatabaseRepositoryInterface
-{
+class ChannelDatabaseRepository implements ChannelDatabaseRepositoryInterface {
 	private app: FirebaseApp;
 	private db: Firestore;
 	constructor() {

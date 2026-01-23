@@ -3,12 +3,12 @@ import {
 	UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { PencilIcon } from "lucide-react";
-import React, { type FC, useState } from "react";
+import { type FC, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc/client";
-import type { Channel } from "@/models/channel";
-import type { User } from "@/models/user";
+import type { Channel } from "@/types/channel";
+import type { User } from "@/types/user";
 import { Button } from "../../ui/button";
 import { Card } from "../../ui/card";
 import { Checkbox } from "../../ui/checkbox";
@@ -48,7 +48,7 @@ export const ChannelCard: FC<Props> = ({ channel, users, refetchChannels }) => {
 		isPending: loadingUpdateChannelMutation,
 	} = trpc.channel.update.useMutation();
 
-	const startHandlingRemoveUsers = (channelId: string) => {
+	const startHandlingRemoveUsers = (_channelId: string) => {
 		setIsHandlingRemoveUsers(true);
 		setSelectedRemoveUserIds([]);
 	};

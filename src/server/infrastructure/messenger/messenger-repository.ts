@@ -1,6 +1,6 @@
 import { WebClient } from "@slack/web-api";
 import { Err, Ok, type Result } from "@/lib/result";
-import type { User } from "@/models/user";
+import type { User } from "@/types/user";
 import type { MessengerRepositoryInterface } from "@/server/application/interfaces";
 import type { UserTagsAssignment } from "@/server/domain/entities";
 import {
@@ -13,7 +13,7 @@ import { formatUserAssignment } from "../utils";
 
 export const NewMessengerRepository = (): MessengerRepositoryInterface => {
 	return new MessengerRepository();
-}
+};
 
 class MessengerRepository implements MessengerRepositoryInterface {
 	private client: WebClient;
@@ -60,7 +60,7 @@ class MessengerRepository implements MessengerRepositoryInterface {
 
 		const messageBlocksSequence = messages
 			.map((message) => {
-				const ts = message.ts; // can update the 1st message with this!
+				const _ts = message.ts; // can update the 1st message with this!
 				const isBot = !!message.bot_id;
 				if (!message.text) return null;
 

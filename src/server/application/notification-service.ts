@@ -2,7 +2,7 @@ import { Random } from "random";
 import {
 	getJapanTimeAsObject,
 	isSameDateWithTodayJapanTime,
-	isFutureDateJapanTime
+	isFutureDateJapanTime,
 } from "@/lib/date";
 import { removeBotUserIdTag } from "@/server/infrastructure/utils";
 import type { MessageParam } from "../domain/entities";
@@ -99,9 +99,12 @@ export class NotificationService {
 		const futureUpcomingSlots = upcomingSlots.filter((slot) =>
 			isFutureDateJapanTime(slot.date),
 		);
-		const channelsToReinitialize = channels.filter((channel) =>
-			// not in futureUpcomingSlots
-			!futureUpcomingSlots.some((slot) => slot.channelId === channel.channelId)
+		const channelsToReinitialize = channels.filter(
+			(channel) =>
+				// not in futureUpcomingSlots
+				!futureUpcomingSlots.some(
+					(slot) => slot.channelId === channel.channelId,
+				),
 		);
 
 		// Re-initialize outdated slots
@@ -197,9 +200,12 @@ export class NotificationService {
 		const futureUpcomingSlots = upcomingSlots.filter((slot) =>
 			isFutureDateJapanTime(slot.date),
 		);
-		const channelsToReinitialize = channels.filter((channel) =>
-			// not in futureUpcomingSlots
-			!futureUpcomingSlots.some((slot) => slot.channelId === channel.channelId)
+		const channelsToReinitialize = channels.filter(
+			(channel) =>
+				// not in futureUpcomingSlots
+				!futureUpcomingSlots.some(
+					(slot) => slot.channelId === channel.channelId,
+				),
 		);
 
 		// Re-initialize outdated slots
