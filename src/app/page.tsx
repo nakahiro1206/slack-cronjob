@@ -1,7 +1,7 @@
 "use client";
 
 import { Login } from "@/components/login/Login";
-import { Main } from "@/components/main/Main";
+import { Main } from "@/components/main";
 import { trpc } from "@/lib/trpc/client";
 
 function Home() {

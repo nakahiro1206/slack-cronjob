@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { dayEnum } from "@/models/channel";
+import { dayEnum } from "@/types/channel";
 import { channelService } from "@/server/application/container";
 import { publicProcedure, router } from "../server";
 

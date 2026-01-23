@@ -1,6 +1,6 @@
 import type { PurpleBlock } from "@slack/web-api/dist/response/ConversationsHistoryResponse";
 import { z } from "zod";
-import type { User } from "@/models/user";
+import type { User } from "@/types/user";
 import type { UserTagsAssignment } from "@/server/domain/entities";
 
 const linkButtonSchema = z.object({
@@ -24,7 +24,7 @@ const linkButtonSchema = z.object({
 
 type LinkButtonBlock = z.infer<typeof linkButtonSchema>;
 
-export const dividerBlock = z.object({
+const dividerBlock = z.object({
 	type: z.literal("divider"),
 });
 
@@ -82,7 +82,7 @@ export const extractMainContent = (
 	return res;
 };
 
-export const headerSchema = z.object({
+const headerSchema = z.object({
 	type: z.literal("section"),
 	fields: z.tuple([
 		z.object({

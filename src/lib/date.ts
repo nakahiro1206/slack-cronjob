@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import type { DayEnum } from "@/models/channel";
+import type { DayEnum } from "@/types/channel";
 
 export const getJapanTime = (isoString?: string): DateTime => {
 	const d = isoString ? DateTime.fromISO(isoString) : DateTime.now();
@@ -119,4 +119,4 @@ export const isFutureDateJapanTime = (targetISOString: string): boolean => {
 	const targetJapanTime = getJapanTime(targetISOString);
 	const nowJapanTime = getJapanTime();
 	return targetJapanTime.startOf("day") > nowJapanTime.startOf("day");
-}
+};

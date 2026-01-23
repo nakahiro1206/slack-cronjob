@@ -1,6 +1,6 @@
 import type { UserTagsAssignment } from "@/server/domain/entities";
 
-export const decorateUserTagIfNeeded = (tag: string): string => {
+const decorateUserTagIfNeeded = (tag: string): string => {
 	const regex = /<@[\w\d]+>/g;
 	if (tag.match(regex)) {
 		return tag;

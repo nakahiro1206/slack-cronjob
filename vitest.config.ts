@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => ({
 	test: {
 		environment: "jsdom",
 		env: loadEnv(mode, process.cwd(), ""),
-		onConsoleLog(log: string, type: "stdout" | "stderr"): false | void {
+		onConsoleLog(log: string, type: "stdout" | "stderr"): false | undefined {
 			console.log("log in test: ", log);
 			if (log === "message from third party library" && type === "stdout") {
 				return false;

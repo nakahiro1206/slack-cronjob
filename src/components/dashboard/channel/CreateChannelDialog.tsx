@@ -20,8 +20,8 @@ import {
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { trpc } from "@/lib/trpc/client";
-import { type Channel, channelSchema } from "@/models/channel";
-import type { User } from "@/models/user";
+import { type Channel, channelSchema } from "@/types/channel";
+import type { User } from "@/types/user";
 
 interface ChannelDialogProps {
 	isOpen: boolean;

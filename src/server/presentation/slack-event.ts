@@ -16,8 +16,8 @@ export async function slackEventPresentation(
 	}
 
 	if (requestType !== "event_callback") {
-        return new Response("Invalid request", { status: 400 });
-    }
+		return new Response("Invalid request", { status: 400 });
+	}
 
 	// verify
 	const verified = slackAuthMiddleWare.verifyRequest({ request, rawBody });
@@ -78,7 +78,8 @@ export async function slackEventPresentation(
 			const username = user.name;
 			const isInHuddle = user.profile.huddle_state === "in_a_huddle";
 			console.log(
-				`User huddle changed: ${username} (${userId}) is now ${isInHuddle ? "in a huddle" : "not in a huddle"
+				`User huddle changed: ${username} (${userId}) is now ${
+					isInHuddle ? "in a huddle" : "not in a huddle"
 				}`,
 			);
 		}
