@@ -13,14 +13,13 @@ import {
 	type DragOverEvent,
 	type UniqueIdentifier,
 } from "@dnd-kit/core";
-import {
-	arrayMove,
-	sortableKeyboardCoordinates,
-} from "@dnd-kit/sortable";
+import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import type { User } from "@/types/user";
 
 export type UserEntry = {
 	id: string;
 	userId: string;
+	username: string;
 };
 export type UserAssignment = {
 	online: UserEntry[]; // user id array
@@ -33,10 +32,11 @@ function hasOwnKey<T extends object>(obj: T, key: PropertyKey): key is keyof T {
 
 type Props = {
 	channel: UpcomingSlot;
+	users: User[];
 	refetchUpcomingSlots: () => void;
 };
 export const useUpcomingCard = (props: Props) => {
-	const { channel, refetchUpcomingSlots } = props;
+	const { channel, users, refetchUpcomingSlots } = props;
 
 	const [isHandlingRemoveUsers, setIsHandlingRemoveUsers] = useState(false);
 	const [selectedRemoveUserIds, setSelectedRemoveUserIds] = useState<string[]>(
@@ -164,14 +164,22 @@ export const useUpcomingCard = (props: Props) => {
 
 	// D&D
 	const [userAssignment, setUserAssignment] = useState<UserAssignment>(() => {
-		const online = channel.onlineUserIds.map((userId) => ({
-			id: userId,
-			userId,
-		}));
-		const offline = channel.offlineUserIds.map((userId) => ({
-			id: userId,
-			userId,
-		}));
+		const online = channel.onlineUserIds.map((userId) => {
+			const user = users.find((u) => u.userId === userId);
+			return {
+				id: userId,
+				username: user ? user.userName : "Unknown User",
+				userId,
+			};
+		});
+		const offline = channel.offlineUserIds.map((userId) => {
+			const user = users.find((u) => u.userId === userId);
+			return {
+				id: userId,
+				username: user ? user.userName : "Unknown User",
+				userId,
+			};
+		});
 		return { online, offline };
 	});
 

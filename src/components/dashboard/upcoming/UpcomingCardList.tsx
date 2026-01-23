@@ -15,7 +15,6 @@ import { Button } from "../../ui/button";
 import { Card } from "../../ui/card";
 import { Spinner } from "../../ui/spinner";
 import { UpcomingCard } from "./UpcomingCard";
-import Sample from "./sample";
 
 type Props = {
 	upcomingSlots: UpcomingSlot[] | undefined;
@@ -59,8 +58,6 @@ export const UpcomingCardList: FC<Props> = ({
 			</div>
 			{isMobile === false && (
 				<div className="grid grid-cols-2 gap-4">
-					{/* inject example d&d  */}
-					<Sample />
 					{upcomingSlots
 						?.sort((a, b) => {
 							return a.date.localeCompare(b.date);

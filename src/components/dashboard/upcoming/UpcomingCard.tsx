@@ -1,6 +1,4 @@
-import {
-	PencilIcon,
-} from "@heroicons/react/24/outline";
+import { PencilIcon } from "@heroicons/react/24/outline";
 import { Badge } from "@/components/ui/badge";
 import type { UpcomingSlot } from "@/types/upcoming-slot";
 import type { User } from "@/types/user";
@@ -15,12 +13,7 @@ import {
 	DialogTitle,
 } from "../../ui/dialog";
 import { Spinner } from "../../ui/spinner";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableRow,
-} from "../../ui/table";
+import { Table, TableBody, TableCell, TableRow } from "../../ui/table";
 import { UserSelectDialogButton } from "./AddUserDialogButton";
 import { DeleteUpcomingSlotButton } from "./CancelUpcomingDialogButton";
 import { useUpcomingCard } from "./upcomingCard.hooks";
@@ -104,7 +97,7 @@ const SortableRow = ({
 	return (
 		<TableRow ref={setNodeRef} style={style} {...attributes} {...listeners}>
 			<TableCell className="font-medium">{item.userId}</TableCell>
-			<TableCell>{item.userId}</TableCell>
+			<TableCell>{item.username}</TableCell>
 		</TableRow>
 	);
 };
@@ -142,6 +135,7 @@ export const UpcomingCard = ({
 		setActiveId,
 	} = useUpcomingCard({
 		channel,
+		users: users || [],
 		refetchUpcomingSlots,
 	});
 	const { year, month, date, day } = dateObj;
@@ -276,7 +270,7 @@ export const UpcomingCard = ({
 					</div>
 				)}
 
-				<div className="p-10 space-y-10">
+				<div className="space-y-10">
 					<DndContext
 						sensors={sensors}
 						collisionDetection={closestCorners} // Use corners for better detection
