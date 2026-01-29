@@ -30,8 +30,7 @@ export const upcomingRouter = router({
 			return await upcomingSlotService.deleteUpcomingSlot(input.channelId);
 		}),
 
-	// Register users to a channel
-	registerUsers: publicProcedure
+	registerOfflineUsers: publicProcedure
 		.input(
 			z.object({
 				channelId: z.string().min(1),
@@ -39,13 +38,13 @@ export const upcomingRouter = router({
 			}),
 		)
 		.mutation(async ({ input }) => {
-			return await upcomingSlotService.registerUsersToChannel(
+			return await upcomingSlotService.registerOfflineUsers(
 				input.channelId,
 				input.userIds,
 			);
 		}),
 
-	removeUsers: publicProcedure
+	registerOnlineUsers: publicProcedure
 		.input(
 			z.object({
 				channelId: z.string().min(1),
@@ -53,7 +52,35 @@ export const upcomingRouter = router({
 			}),
 		)
 		.mutation(async ({ input }) => {
-			return await upcomingSlotService.removeUsersFromChannel(
+			return await upcomingSlotService.registerOnlineUsers(
+				input.channelId,
+				input.userIds,
+			);
+		}),
+
+	removeOfflineUsers: publicProcedure
+		.input(
+			z.object({
+				channelId: z.string().min(1),
+				userIds: z.array(z.string()),
+			}),
+		)
+		.mutation(async ({ input }) => {
+			return await upcomingSlotService.removeOfflineUsers(
+				input.channelId,
+				input.userIds,
+			);
+		}),
+
+	removeOnlineUsers: publicProcedure
+		.input(
+			z.object({
+				channelId: z.string().min(1),
+				userIds: z.array(z.string()),
+			}),
+		)
+		.mutation(async ({ input }) => {
+			return await upcomingSlotService.removeOnlineUsers(
 				input.channelId,
 				input.userIds,
 			);

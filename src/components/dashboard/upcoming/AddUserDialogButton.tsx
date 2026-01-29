@@ -30,18 +30,31 @@ export const UserSelectDialogButton = ({
 	channelId,
 	unregisteredUsers,
 	refetchChannels,
+	mode,
 }: {
 	channelId: string;
 	unregisteredUsers: User[];
 	refetchChannels: () => void;
+	mode: "offline" | "online";
 }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const handleClose = () => setIsOpen(false);
 	const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
 	const {
-		mutate: registerUsersMutation,
-		isPending: loadingRegisterUsersMutation,
-	} = trpc.upcoming.registerUsers.useMutation();
+		mutate: registerOfflineUsersMutation,
+		isPending: loadingRegisterOfflineUsersMutation,
+	} = trpc.upcoming.registerOfflineUsers.useMutation();
+	const {
+		mutate: registerOnlineUsersMutation,
+		isPending: loadingRegisterOnlineUsersMutation,
+	} = trpc.upcoming.registerOnlineUsers.useMutation();
+
+	const registerUsersMutation =
+		mode === "offline" ? registerOfflineUsersMutation : registerOnlineUsersMutation;
+	const loadingRegisterUsersMutation =
+		mode === "offline"
+			? loadingRegisterOfflineUsersMutation
+			: loadingRegisterOnlineUsersMutation;
 
 	const handleUserSelect = (userId: string) => {
 		if (!selectedUserIds.includes(userId)) {
@@ -106,7 +119,7 @@ export const UserSelectDialogButton = ({
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
 			<DialogTrigger asChild>
 				<Button variant="outline">
-					<PlusIcon className="h-4 w-4" /> Add User
+					<PlusIcon className="h-4 w-4" /> Add {mode === "offline" ? "Offline" : "Online"}
 				</Button>
 			</DialogTrigger>
 			<DialogContent>

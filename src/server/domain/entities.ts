@@ -29,9 +29,13 @@ export const channelSchema = z.object({
 	day: dayEnum,
 });
 
-export const upcomingSlotSchema = z.object({
-	...channelSchema.shape,
+export const upcomingSlotSchema = channelSchema.pick({
+	channelId: true,
+	channelName: true,
+}).extend({
 	date: z.string().min(1),
+	offlineUserIds: z.array(z.string()),
+	onlineUserIds: z.array(z.string()),
 });
 
 export type Channel = z.infer<typeof channelSchema>;

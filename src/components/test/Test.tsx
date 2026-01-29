@@ -110,8 +110,12 @@ export const Test = ({ refetchUpcomingSlots }: TestProps) => {
 									</h3>
 								</div>
 								<span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-									{channel.userIds.length} member
-									{channel.userIds.length !== 1 ? "s" : ""}
+									{channel.offlineUserIds.length + channel.onlineUserIds.length}{" "}
+									member
+									{channel.offlineUserIds.length + channel.onlineUserIds.length !==
+									1
+										? "s"
+										: ""}
 								</span>
 							</div>
 							<p className="text-sm text-gray-600 mb-3">
@@ -119,10 +123,25 @@ export const Test = ({ refetchUpcomingSlots }: TestProps) => {
 							</p>
 							<div>
 								<h4 className="text-sm font-medium text-gray-700 mb-2">
-									Members:
+									Online Members:
 								</h4>
 								<div className="space-y-1">
-									{channel.userIds.map((userId) => (
+									{channel.onlineUserIds.map((userId) => (
+										<div key={userId} className="flex items-center text-sm">
+											<div className="w-6 h-6 bg-green-200 rounded-full flex items-center justify-center mr-2">
+												<span className="text-xs font-medium text-gray-600">
+													{userId.charAt(0).toUpperCase()}
+												</span>
+											</div>
+											<span className="text-gray-500 ml-2">({userId})</span>
+										</div>
+									))}
+								</div>
+								<h4 className="text-sm font-medium text-gray-700 mb-2 mt-2">
+									Offline Members:
+								</h4>
+								<div className="space-y-1">
+									{channel.offlineUserIds.map((userId) => (
 										<div key={userId} className="flex items-center text-sm">
 											<div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center mr-2">
 												<span className="text-xs font-medium text-gray-600">

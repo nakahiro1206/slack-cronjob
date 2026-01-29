@@ -61,11 +61,19 @@ export interface UpcomingSlotDatabaseRepositoryInterface {
 		channels: Channel[],
 	): Promise<Result<void, Error>>;
 	deleteUpcomingSlot(channelId: string): Promise<Result<void, Error>>;
-	registerUsers(
+	registerOfflineUsers(
 		channelId: string,
 		userIds: string[],
 	): Promise<Result<void, Error>>;
-	removeUsers(
+	registerOnlineUsers(
+		channelId: string,
+		userIds: string[],
+	): Promise<Result<void, Error>>;
+	removeOfflineUsers(
+		channelId: string,
+		userIds: string[],
+	): Promise<Result<void, Error>>;
+	removeOnlineUsers(
 		channelId: string,
 		userIds: string[],
 	): Promise<Result<void, Error>>;

@@ -47,8 +47,16 @@ export const useUpcomingCard = (props: Props) => {
 	const [selectedDate, setSelectedDate] = useState<Date | undefined>(
 		getJapanTimeAsJSDate(channel.date),
 	);
-	const { mutate: removeUsersMutation, isPending: loadingRemoveUsersMutation } =
-		trpc.upcoming.removeUsers.useMutation();
+	const {
+		mutate: removeOfflineUsersMutation,
+		isPending: loadingRemoveOfflineUsersMutation,
+	} = trpc.upcoming.removeOfflineUsers.useMutation();
+	const {
+		mutate: removeOnlineUsersMutation,
+		isPending: loadingRemoveOnlineUsersMutation,
+	} = trpc.upcoming.removeOnlineUsers.useMutation();
+	const loadingRemoveUsersMutation =
+		loadingRemoveOfflineUsersMutation || loadingRemoveOnlineUsersMutation;
 	const { mutate: changeDateMutation, isPending: loadingChangeDateMutation } =
 		trpc.upcoming.changeDate.useMutation();
 	const {
@@ -81,24 +89,65 @@ export const useUpcomingCard = (props: Props) => {
 			toast.error("No users selected");
 			return;
 		}
-		removeUsersMutation(
-			{ channelId: channel.channelId, userIds: selectedRemoveUserIds },
-			{
-				onSuccess: (result) => {
-					if (result.success) {
-						toast.success("Users removed successfully");
-						refetchUpcomingSlots();
-						endHandlingRemoveUsers();
-					} else {
-						toast.error("Failed to remove users");
-					}
-				},
-				onError: (error) => {
-					toast.error(error.message);
-					endHandlingRemoveUsers();
-				},
-			},
+		const offlineUsersToRemove = selectedRemoveUserIds.filter((id) =>
+			channel.offlineUserIds.includes(id),
 		);
+		const onlineUsersToRemove = selectedRemoveUserIds.filter((id) =>
+			channel.onlineUserIds.includes(id),
+		);
+
+		const promises: Promise<void>[] = [];
+
+		if (offlineUsersToRemove.length > 0) {
+			promises.push(
+				new Promise((resolve, reject) => {
+					removeOfflineUsersMutation(
+						{ channelId: channel.channelId, userIds: offlineUsersToRemove },
+						{
+							onSuccess: (result) => {
+								if (result.success) {
+									resolve();
+								} else {
+									reject(new Error("Failed to remove offline users"));
+								}
+							},
+							onError: (error) => reject(error),
+						},
+					);
+				}),
+			);
+		}
+
+		if (onlineUsersToRemove.length > 0) {
+			promises.push(
+				new Promise((resolve, reject) => {
+					removeOnlineUsersMutation(
+						{ channelId: channel.channelId, userIds: onlineUsersToRemove },
+						{
+							onSuccess: (result) => {
+								if (result.success) {
+									resolve();
+								} else {
+									reject(new Error("Failed to remove online users"));
+								}
+							},
+							onError: (error) => reject(error),
+						},
+					);
+				}),
+			);
+		}
+
+		Promise.all(promises)
+			.then(() => {
+				toast.success("Users removed successfully");
+				refetchUpcomingSlots();
+				endHandlingRemoveUsers();
+			})
+			.catch((error) => {
+				toast.error(error.message || "Failed to remove users");
+				endHandlingRemoveUsers();
+			});
 	};
 
 	const executeDateChange = () => {

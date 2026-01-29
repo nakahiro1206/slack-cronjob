@@ -67,15 +67,23 @@ export class NotificationService {
 			await Promise.all(
 				targetSlots.map(async (slot) => {
 					const title = `*📣 1on1 order for ${slot.channelName}* \n This order is for the meeting on ${day}, ${month} ${date}, ${year}.`;
-					const shuffledUserIds = slot.userIds.sort(
+					const shuffledOfflineUserIds = [...slot.offlineUserIds].sort(
 						() => rng.float(0, 1) - 0.5,
 					);
-					const userMentions = shuffledUserIds.map((userId) => `<@${userId}>`);
+					const shuffledOnlineUserIds = [...slot.onlineUserIds].sort(
+						() => rng.float(0, 1) - 0.5,
+					);
+					const offlineMentions = shuffledOfflineUserIds.map(
+						(userId) => `<@${userId}>`,
+					);
+					const onlineMentions = shuffledOnlineUserIds.map(
+						(userId) => `<@${userId}>`,
+					);
 					await this.messengerRepository.postMessage(
 						slot.channelId,
 						title,
 						description,
-						{ offline: userMentions, online: [] },
+						{ offline: offlineMentions, online: onlineMentions },
 						users,
 					);
 				}),

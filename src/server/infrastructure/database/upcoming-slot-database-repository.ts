@@ -65,8 +65,11 @@ class UpcomingSlotDatabaseRepository
 						channel.channelId,
 					);
 					await setDoc(upcomingSlotRef, {
-						...channel,
+						channelId: channel.channelId,
+						channelName: channel.channelName,
 						date: nextMeetingDate || "",
+						offlineUserIds: [],
+						onlineUserIds: [],
 					});
 					return Ok(undefined);
 				}),
@@ -112,7 +115,7 @@ class UpcomingSlotDatabaseRepository
 			return Err<void, Error>(error as Error);
 		}
 	}
-	async registerUsers(channelId: string, userIds: string[]) {
+	async registerOfflineUsers(channelId: string, userIds: string[]) {
 		try {
 			const upcomingSlotRef = collection(this.db, "upcoming");
 			const docRef = doc(upcomingSlotRef, channelId);
@@ -125,11 +128,11 @@ class UpcomingSlotDatabaseRepository
 				return Err<void, Error>(new Error("Invalid upcoming slot data"));
 			}
 			const updatedUsers = Array.from(
-				new Set([...(parsed.data.userIds || []), ...userIds]),
+				new Set([...parsed.data.offlineUserIds, ...userIds]),
 			);
 			const updatedSlot: UpcomingSlot = {
 				...parsed.data,
-				userIds: updatedUsers,
+				offlineUserIds: updatedUsers,
 			};
 			await setDoc(docRef, updatedSlot);
 			return Ok(undefined);
@@ -137,7 +140,7 @@ class UpcomingSlotDatabaseRepository
 			return Err<void, Error>(error as Error);
 		}
 	}
-	async removeUsers(channelId: string, userIds: string[]) {
+	async registerOnlineUsers(channelId: string, userIds: string[]) {
 		try {
 			const upcomingSlotRef = collection(this.db, "upcoming");
 			const docRef = doc(upcomingSlotRef, channelId);
@@ -149,12 +152,62 @@ class UpcomingSlotDatabaseRepository
 			if (!parsed.success) {
 				return Err<void, Error>(new Error("Invalid upcoming slot data"));
 			}
-			const updatedUsers = (parsed.data.userIds || []).filter(
+			const updatedUsers = Array.from(
+				new Set([...parsed.data.onlineUserIds, ...userIds]),
+			);
+			const updatedSlot: UpcomingSlot = {
+				...parsed.data,
+				onlineUserIds: updatedUsers,
+			};
+			await setDoc(docRef, updatedSlot);
+			return Ok(undefined);
+		} catch (error) {
+			return Err<void, Error>(error as Error);
+		}
+	}
+	async removeOfflineUsers(channelId: string, userIds: string[]) {
+		try {
+			const upcomingSlotRef = collection(this.db, "upcoming");
+			const docRef = doc(upcomingSlotRef, channelId);
+			const docSnap = await getDoc(docRef);
+			if (!docSnap.exists()) {
+				return Err<void, Error>(new Error("Upcoming slot not found"));
+			}
+			const parsed = upcomingSlotSchema.safeParse(docSnap.data());
+			if (!parsed.success) {
+				return Err<void, Error>(new Error("Invalid upcoming slot data"));
+			}
+			const updatedUsers = parsed.data.offlineUserIds.filter(
 				(id) => !userIds.includes(id),
 			);
 			const updatedSlot: UpcomingSlot = {
 				...parsed.data,
-				userIds: updatedUsers,
+				offlineUserIds: updatedUsers,
+			};
+			await setDoc(docRef, updatedSlot);
+			return Ok(undefined);
+		} catch (error) {
+			return Err<void, Error>(error as Error);
+		}
+	}
+	async removeOnlineUsers(channelId: string, userIds: string[]) {
+		try {
+			const upcomingSlotRef = collection(this.db, "upcoming");
+			const docRef = doc(upcomingSlotRef, channelId);
+			const docSnap = await getDoc(docRef);
+			if (!docSnap.exists()) {
+				return Err<void, Error>(new Error("Upcoming slot not found"));
+			}
+			const parsed = upcomingSlotSchema.safeParse(docSnap.data());
+			if (!parsed.success) {
+				return Err<void, Error>(new Error("Invalid upcoming slot data"));
+			}
+			const updatedUsers = parsed.data.onlineUserIds.filter(
+				(id) => !userIds.includes(id),
+			);
+			const updatedSlot: UpcomingSlot = {
+				...parsed.data,
+				onlineUserIds: updatedUsers,
 			};
 			await setDoc(docRef, updatedSlot);
 			return Ok(undefined);

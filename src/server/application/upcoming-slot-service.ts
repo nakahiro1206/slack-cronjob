@@ -60,29 +60,61 @@ export class UpcomingSlotService {
 		);
 	}
 
-	async registerUsersToChannel(channelId: string, userIds: string[]) {
-		const result = await this.upcomingSlotDatabaseRepository.registerUsers(
-			channelId,
-			userIds,
-		);
+	async registerOfflineUsers(channelId: string, userIds: string[]) {
+		const result =
+			await this.upcomingSlotDatabaseRepository.registerOfflineUsers(
+				channelId,
+				userIds,
+			);
 		return result.match(
 			() => ({ success: true }),
 			(error) => {
-				console.error("Failed to register users:", error);
+				console.error("Failed to register offline users:", error);
 				return { success: false, error: error.message };
 			},
 		);
 	}
 
-	async removeUsersFromChannel(channelId: string, userIds: string[]) {
-		const result = await this.upcomingSlotDatabaseRepository.removeUsers(
-			channelId,
-			userIds,
-		);
+	async registerOnlineUsers(channelId: string, userIds: string[]) {
+		const result =
+			await this.upcomingSlotDatabaseRepository.registerOnlineUsers(
+				channelId,
+				userIds,
+			);
 		return result.match(
 			() => ({ success: true }),
 			(error) => {
-				console.error("Failed to remove users:", error);
+				console.error("Failed to register online users:", error);
+				return { success: false, error: error.message };
+			},
+		);
+	}
+
+	async removeOfflineUsers(channelId: string, userIds: string[]) {
+		const result =
+			await this.upcomingSlotDatabaseRepository.removeOfflineUsers(
+				channelId,
+				userIds,
+			);
+		return result.match(
+			() => ({ success: true }),
+			(error) => {
+				console.error("Failed to remove offline users:", error);
+				return { success: false, error: error.message };
+			},
+		);
+	}
+
+	async removeOnlineUsers(channelId: string, userIds: string[]) {
+		const result =
+			await this.upcomingSlotDatabaseRepository.removeOnlineUsers(
+				channelId,
+				userIds,
+			);
+		return result.match(
+			() => ({ success: true }),
+			(error) => {
+				console.error("Failed to remove online users:", error);
 				return { success: false, error: error.message };
 			},
 		);

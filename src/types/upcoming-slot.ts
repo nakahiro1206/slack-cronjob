@@ -5,7 +5,6 @@ const upcomingSlotSchema = channelSchema
 	.pick({
 		channelId: true,
 		channelName: true,
-		day: true,
 	})
 	.extend({
 		date: z.string().min(1),

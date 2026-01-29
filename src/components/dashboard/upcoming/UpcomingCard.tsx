@@ -155,7 +155,7 @@ export const UpcomingCard = ({
 								<div className="text-xl font-semibold">
 									{channel.channelName}
 								</div>
-								<Badge variant="outline">{channel.day}</Badge>
+								
 								<DeleteUpcomingSlotButton
 									onProceed={handleDeleteUpcomingSlot}
 									onCancel={() => {}}
@@ -176,13 +176,24 @@ export const UpcomingCard = ({
 							</div>
 						</div>
 						<div className="flex flex-col items-end gap-2">
-							<UserSelectDialogButton
-								channelId={channel.channelId}
-								unregisteredUsers={
-									users?.filter((user) => !isInSlot(user.userId)) || []
-								}
-								refetchChannels={refetchUpcomingSlots}
-							/>
+							<div className="flex gap-2">
+								<UserSelectDialogButton
+									channelId={channel.channelId}
+									unregisteredUsers={
+										users?.filter((user) => !isInSlot(user.userId)) || []
+									}
+									refetchChannels={refetchUpcomingSlots}
+									mode="online"
+								/>
+								<UserSelectDialogButton
+									channelId={channel.channelId}
+									unregisteredUsers={
+										users?.filter((user) => !isInSlot(user.userId)) || []
+									}
+									refetchChannels={refetchUpcomingSlots}
+									mode="offline"
+								/>
+							</div>
 
 							{isHandlingRemoveUsers ? (
 								<div className="flex items-center gap-2 justify-end">
@@ -214,7 +225,7 @@ export const UpcomingCard = ({
 					<div className="w-full">
 						<div className="flex flex-row items-center gap-2">
 							<div className="text-xl font-semibold">{channel.channelName}</div>
-							<Badge variant="outline">{channel.day}</Badge>
+							
 							<DeleteUpcomingSlotButton
 								onProceed={handleDeleteUpcomingSlot}
 								onCancel={() => {}}
@@ -234,13 +245,24 @@ export const UpcomingCard = ({
 							</Button>
 						</div>
 						<div className="flex items-end gap-2">
-							<UserSelectDialogButton
-								channelId={channel.channelId}
-								unregisteredUsers={
-									users?.filter((user) => !isInSlot(user.userId)) || []
-								}
-								refetchChannels={refetchUpcomingSlots}
-							/>
+							<div className="flex gap-2">
+								<UserSelectDialogButton
+									channelId={channel.channelId}
+									unregisteredUsers={
+										users?.filter((user) => !isInSlot(user.userId)) || []
+									}
+									refetchChannels={refetchUpcomingSlots}
+									mode="online"
+								/>
+								<UserSelectDialogButton
+									channelId={channel.channelId}
+									unregisteredUsers={
+										users?.filter((user) => !isInSlot(user.userId)) || []
+									}
+									refetchChannels={refetchUpcomingSlots}
+									mode="offline"
+								/>
+							</div>
 
 							{isHandlingRemoveUsers ? (
 								<div className="flex items-center gap-2 justify-end">

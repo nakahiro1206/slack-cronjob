@@ -30,7 +30,6 @@ export const useMain = () => {
 				"U06PFA4MZU3",
 				"U0A58SPH03X",
 			],
-			day: "THURSDAY",
 			date: "2026-01-29T08:50:24.161+09:00",
 		},
 		{
@@ -51,7 +50,6 @@ export const useMain = () => {
 				"U0A6JFTC8QP",
 				"U0A8CE726A3",
 			],
-			day: "WEDNESDAY",
 			date: "2026-01-28T23:17:16.089+09:00",
 		},
 	];
@@ -79,7 +77,7 @@ export const useMain = () => {
 	useEffect(() => {
 		if (channelsError) toast.error(channelsError.message);
 		if (usersError) toast.error(usersError.message);
-		if (upcomingSlotsError) toast.error(upcomingSlotsError.message);
+		// if (upcomingSlotsError) toast.error(upcomingSlotsError.message);
 	}, [channelsError, usersError]);
 
 	return {
