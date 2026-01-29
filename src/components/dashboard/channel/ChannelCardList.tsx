@@ -1,5 +1,5 @@
 import { PlusIcon } from "@heroicons/react/24/solid";
-import React, { type FC } from "react";
+import type { FC } from "react";
 import {
 	Carousel,
 	CarouselContent,

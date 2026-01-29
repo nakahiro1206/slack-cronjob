@@ -2,7 +2,7 @@ import { Random } from "random";
 import {
 	getJapanTimeAsObject,
 	isSameDateWithTodayJapanTime,
-	isFutureDateJapanTime
+	isFutureDateJapanTime,
 } from "@/lib/date";
 import { removeBotUserIdTag } from "@/server/infrastructure/utils";
 import type { MessageParam } from "../domain/entities";
@@ -13,6 +13,7 @@ import type {
 	UpcomingSlotDatabaseRepositoryInterface,
 	UserDatabaseRepositoryInterface,
 } from "./interfaces";
+import { Err } from "@/lib/result";
 
 export class NotificationService {
 	constructor(
@@ -99,9 +100,12 @@ export class NotificationService {
 		const futureUpcomingSlots = upcomingSlots.filter((slot) =>
 			isFutureDateJapanTime(slot.date),
 		);
-		const channelsToReinitialize = channels.filter((channel) =>
-			// not in futureUpcomingSlots
-			!futureUpcomingSlots.some((slot) => slot.channelId === channel.channelId)
+		const channelsToReinitialize = channels.filter(
+			(channel) =>
+				// not in futureUpcomingSlots
+				!futureUpcomingSlots.some(
+					(slot) => slot.channelId === channel.channelId,
+				),
 		);
 
 		// Re-initialize outdated slots
@@ -197,9 +201,12 @@ export class NotificationService {
 		const futureUpcomingSlots = upcomingSlots.filter((slot) =>
 			isFutureDateJapanTime(slot.date),
 		);
-		const channelsToReinitialize = channels.filter((channel) =>
-			// not in futureUpcomingSlots
-			!futureUpcomingSlots.some((slot) => slot.channelId === channel.channelId)
+		const channelsToReinitialize = channels.filter(
+			(channel) =>
+				// not in futureUpcomingSlots
+				!futureUpcomingSlots.some(
+					(slot) => slot.channelId === channel.channelId,
+				),
 		);
 
 		// Re-initialize outdated slots
@@ -280,6 +287,7 @@ export class NotificationService {
 			messageTs,
 			obj,
 			users,
+			[], // no one completed
 		);
 		result.match(
 			() => {},
@@ -322,6 +330,15 @@ export class NotificationService {
 			info.rootMessageTs!,
 			{ offline: [], online: [] },
 			[],
+			[],
+		);
+
+		updateToPendingRes.match(
+			() => {},
+			(error) => {
+				console.error("Failed to update message:", error);
+				return Err(error);
+			},
 		);
 
 		const usersResult = await this.userDatabaseRepository.getUsers();
@@ -333,13 +350,22 @@ export class NotificationService {
 			},
 		);
 
-		updateToPendingRes.match(
-			() => {},
+		const upcomingSlotsResult =
+			await this.upcomingSlotDatabaseRepository.getUpcomingSlots();
+		const upcomingSlots = upcomingSlotsResult.match(
+			(slots) => slots,
 			(error) => {
-				console.error("Failed to update message:", error);
-				throw error;
+				console.error("Failed to get upcoming slots:", error);
+				return [];
 			},
 		);
+
+		const slot = upcomingSlots.find((slot) =>
+			slot.channelId === channelId // need to compare by timestamp
+		);
+		if (!slot) {
+			return Err(new Error("No matching upcoming slot found"));
+		}
 
 		const objectResult = await this.llmRepository.generateResponse(
 			[
@@ -355,13 +381,11 @@ export class NotificationService {
 			() => {},
 		);
 
-		const obj = objectResult.match(
-			(res) => res,
-			(error) => {
-				console.error("Failed to generate response:", error);
-				throw error;
-			},
-		);
+		if (objectResult.isErr()) {
+			return Err(objectResult.error);
+		}
+
+		const obj = objectResult.unwrap();
 
 		const updateToNewContentRes = await this.messengerRepository.updateMessage(
 			channelId,
@@ -370,13 +394,14 @@ export class NotificationService {
 			info.rootMessageTs!,
 			obj,
 			users,
+			slot.completedUserIds,
 		);
 
 		updateToNewContentRes.match(
 			() => {},
 			(error) => {
 				console.error("Failed to update message:", error);
-				throw error;
+				return Err(error);
 			},
 		);
 	}

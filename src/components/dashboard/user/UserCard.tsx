@@ -1,6 +1,6 @@
 import { PlusIcon } from "@heroicons/react/24/solid";
 import { CheckIcon, EllipsisVerticalIcon, XIcon } from "lucide-react";
-import React, { type FC, useEffect } from "react";
+import React, { type FC } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

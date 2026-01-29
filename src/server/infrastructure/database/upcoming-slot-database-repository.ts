@@ -64,6 +64,7 @@ class UpcomingSlotDatabaseRepository
 					await setDoc(upcomingSlotRef, {
 						...channel,
 						date: nextMeetingDate || "",
+						completedUserIds: [],
 					});
 					return Ok(undefined);
 				}),
@@ -152,6 +153,62 @@ class UpcomingSlotDatabaseRepository
 			const updatedSlot: UpcomingSlot = {
 				...parsed.data,
 				userIds: updatedUsers,
+			};
+			await setDoc(docRef, updatedSlot);
+			return Ok(undefined);
+		} catch (error) {
+			return Err<void, Error>(error as Error);
+		}
+	}
+	async addCompletedUser(
+		channelId: string,
+		userId: string,
+	): Promise<Result<void, Error>> {
+		try {
+			const upcomingSlotRef = collection(this.db, "upcoming");
+			const docRef = doc(upcomingSlotRef, channelId);
+			const docSnap = await getDoc(docRef);
+			if (!docSnap.exists()) {
+				return Err<void, Error>(new Error("Upcoming slot not found"));
+			}
+			const parsed = upcomingSlotSchema.safeParse(docSnap.data());
+			if (!parsed.success) {
+				return Err<void, Error>(new Error("Invalid upcoming slot data"));
+			}
+			const updatedCompletedUserIds = Array.from(
+				new Set([...(parsed.data.completedUserIds || []), userId]),
+			);
+			const updatedSlot: UpcomingSlot = {
+				...parsed.data,
+				completedUserIds: updatedCompletedUserIds,
+			};
+			await setDoc(docRef, updatedSlot);
+			return Ok(undefined);
+		} catch (error) {
+			return Err<void, Error>(error as Error);
+		}
+	}
+	async removeCompletedUser(
+		channelId: string,
+		userId: string,
+	): Promise<Result<void, Error>> {
+		try {
+			const upcomingSlotRef = collection(this.db, "upcoming");
+			const docRef = doc(upcomingSlotRef, channelId);
+			const docSnap = await getDoc(docRef);
+			if (!docSnap.exists()) {
+				return Err<void, Error>(new Error("Upcoming slot not found"));
+			}
+			const parsed = upcomingSlotSchema.safeParse(docSnap.data());
+			if (!parsed.success) {
+				return Err<void, Error>(new Error("Invalid upcoming slot data"));
+			}
+			const updatedCompletedUserIds = (
+				parsed.data.completedUserIds || []
+			).filter((id) => id !== userId);
+			const updatedSlot: UpcomingSlot = {
+				...parsed.data,
+				completedUserIds: updatedCompletedUserIds,
 			};
 			await setDoc(docRef, updatedSlot);
 			return Ok(undefined);

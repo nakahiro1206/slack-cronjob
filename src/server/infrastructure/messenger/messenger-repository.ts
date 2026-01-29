@@ -13,7 +13,7 @@ import { formatUserAssignment } from "../utils";
 
 export const NewMessengerRepository = (): MessengerRepositoryInterface => {
 	return new MessengerRepository();
-}
+};
 
 class MessengerRepository implements MessengerRepositoryInterface {
 	private client: WebClient;
@@ -60,7 +60,7 @@ class MessengerRepository implements MessengerRepositoryInterface {
 
 		const messageBlocksSequence = messages
 			.map((message) => {
-				const ts = message.ts; // can update the 1st message with this!
+				const _ts = message.ts; // can update the 1st message with this!
 				const isBot = !!message.bot_id;
 				if (!message.text) return null;
 
@@ -78,6 +78,7 @@ class MessengerRepository implements MessengerRepositoryInterface {
 		const rootMessageBlocks = messageBlocksSequence[0] || [];
 		const lastMessageBlocks =
 			messageBlocksSequence[messageBlocksSequence.length - 1] || [];
+			console.log("Last message blocks:", lastMessageBlocks.map((i) => JSON.stringify(i)));
 		const title = extractTopLeftContent(rootMessageBlocks);
 		const userTagAssignments = extractMainContent(rootMessageBlocks);
 		const userQuery = extractTextFromBlocks(lastMessageBlocks).join("\n");
@@ -87,6 +88,38 @@ class MessengerRepository implements MessengerRepositoryInterface {
 			userTagAssignments,
 			rootMessageTs,
 			userQuery,
+		});
+	}
+
+	async extractInfoFromMessage(
+		channelId: string,
+		timestamp: string,
+	): Promise<Result<{
+			title: string;
+			userTagAssignments: UserTagsAssignment;
+		},
+		Error
+	>>  {
+		const message = await this.client.conversations.history({
+			channel: channelId,
+			latest: timestamp,
+			limit: 1,
+			inclusive: true,
+		});
+
+		if (!message.messages || message.messages.length === 0) {
+			return Err(new Error("Message not found"));
+		}
+
+		const msg = message.messages[0];
+		const blocks = msg.blocks || [];
+
+		const title = extractTopLeftContent(blocks);
+		const userTagAssignments = extractMainContent(blocks);
+		
+		return Ok({
+			title,
+			userTagAssignments,
 		});
 	}
 
@@ -111,6 +144,7 @@ class MessengerRepository implements MessengerRepositoryInterface {
 				bottomContent:
 					"Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
 				users: users,
+				completedUserIds: [],
 			}),
 		});
 
@@ -129,6 +163,7 @@ class MessengerRepository implements MessengerRepositoryInterface {
 		timestamp: string,
 		userTagsAssignment: UserTagsAssignment,
 		users: User[],
+		completedUserIds: string[],
 	): Promise<Result<void, Error>> {
 		const formattedUserAssignments = formatUserAssignment(userTagsAssignment);
 		const updatedMessage = await this.client.chat.update({
@@ -144,6 +179,7 @@ class MessengerRepository implements MessengerRepositoryInterface {
 				bottomContent:
 					"Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
 				users: users,
+				completedUserIds: completedUserIds,
 			}),
 		});
 

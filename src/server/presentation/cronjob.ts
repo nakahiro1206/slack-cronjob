@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { notificationService } from "@/server/application/container";
-import { revalidatePath } from 'next/cache';
+import { revalidatePath } from "next/cache";
 
 export async function notifyByCronjobPresentation(request: NextRequest) {
 	// Verify the request is from Vercel Cron

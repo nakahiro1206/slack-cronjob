@@ -1,4 +1,4 @@
-import React, { type FC, useState } from "react";
+import type { FC } from "react";
 import { toast } from "sonner";
 import {
 	Carousel,

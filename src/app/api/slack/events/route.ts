@@ -1,3 +1,5 @@
-import { slackEventPresentation } from "@/server/presentation/slack-event";
+// https://github.com/vercel-partner-solutions/slack-bolt-with-next
 
-export { slackEventPresentation as POST };
+import { createHandler } from "@vercel/slack-bolt";
+import { app, receiver } from "@/server/presentation/bolt";
+export const POST = createHandler(app, receiver);

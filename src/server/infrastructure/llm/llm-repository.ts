@@ -10,7 +10,7 @@ import { formatUserAssignment } from "../../infrastructure/utils";
 
 export const NewLlmRepository = (): LLMRepositoryInterface => {
 	return new LlmRepository();
-}
+};
 
 export class LlmRepository implements LLMRepositoryInterface {
 	private client: OpenAI;
@@ -23,22 +23,23 @@ export class LlmRepository implements LLMRepositoryInterface {
 
 	generateResponse = async (
 		messages: MessageParam[],
-		updateStatus?: (status: string) => void,
+		_updateStatus?: (status: string) => void,
 	): Promise<Result<UserTagsAssignment, Error>> => {
-		const res = await this.client.chat.completions.create({
-			model: "gpt-4o-2024-08-06",
-			messages: new Array<MessageParam>().concat([
-					{
-						role: "system",
-						content: `You are a Slack bot assistant.
+		const messagesWithPrompt: MessageParam[] = [
+			{
+				role: "system",
+				content: `You are a Slack bot assistant.
 - Re-organize the order based on the intial order and given user's request.
 - user tag is represented as <@user_id>. In your response you should keep this format in your respone.
 - Every user tag should be unique. If the same user would appear multiple times across offline and online meeting, you should only remove either one.
 - If the message does not contain any user tag, you should not add any user tag in your response and just return the message
 - If not specified, the order is for offline meeting. So not-specified user request will be applied to offline meeting.`,
-					},
-				])
-				.concat(messages),
+			},
+			...messages,
+		];
+		const res = await this.client.chat.completions.create({
+			model: "gpt-4o-2024-08-06",
+			messages: messagesWithPrompt,
 			response_format: {
 				type: "json_schema",
 				/**  should return { offline: string[]; online: string[] } */

@@ -30,8 +30,17 @@ export interface MessengerRepositoryInterface {
 			Error
 		>
 	>;
+	extractInfoFromMessage(
+		channelId: string,
+		timestamp: string,
+	): Promise<Result<{
+			title: string;
+			userTagAssignments: UserTagsAssignment;
+		},
+		Error
+	>>  
 	postMessage(
-		channelIs: string,
+		channelId: string,
 		title: string,
 		description: string,
 		userTagsAssignment: UserTagsAssignment,
@@ -44,6 +53,7 @@ export interface MessengerRepositoryInterface {
 		timestamp: string,
 		userTagsAssignment: UserTagsAssignment,
 		users: User[],
+		completedUserIds: string[],
 	): Promise<Result<void, Error>>;
 }
 
@@ -72,6 +82,14 @@ export interface UpcomingSlotDatabaseRepositoryInterface {
 	changeDate(
 		channelId: string,
 		isoString: string,
+	): Promise<Result<void, Error>>;
+	addCompletedUser(
+		channelId: string,
+		userId: string,
+	): Promise<Result<void, Error>>;
+	removeCompletedUser(
+		channelId: string,
+		userId: string,
 	): Promise<Result<void, Error>>;
 }
 

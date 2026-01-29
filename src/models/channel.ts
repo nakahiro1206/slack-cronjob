@@ -21,6 +21,7 @@ export const channelSchema = z.object({
 export const upcomingSlotSchema = z.object({
 	...channelSchema.shape,
 	date: z.string().min(1),
+	completedUserIds: z.array(z.string()),
 });
 
 export type Channel = z.infer<typeof channelSchema>;

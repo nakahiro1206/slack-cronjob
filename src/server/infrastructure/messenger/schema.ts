@@ -43,13 +43,13 @@ const HeaderBlockSchema = z.object({
 export const extractMainContent = (
 	blocks: PurpleBlock[],
 ): UserTagsAssignment => {
-	if (blocks.length <= 2) {
+	if (blocks.length <= 3) {
 		return {
 			offline: [],
 			online: [],
 		};
 	}
-	const mainContentBlock = blocks.slice(1, -1); // remove first and last block corresponding to header and footer
+	const mainContentBlock = blocks.slice(2, -1); // remove first 2 and last block corresponding to header and footer
 	const result = linkButtonSchema
 		.or(dividerBlock)
 		.or(HeaderBlockSchema)
@@ -75,7 +75,12 @@ export const extractMainContent = (
 				currentSection = "online";
 			}
 		} else if (block.type === "section") {
-			const userMention = block.text.text;
+			const regex = /^<@U[A-Z0-9]+>$/;
+			const match = block.text.text.match(regex); // search for user mention
+			if (!match) {
+				return; // skip if no match
+			}
+			const userMention = match[0]; // should be like <@U12345678>
 			res[currentSection].push(userMention);
 		}
 	});
@@ -109,11 +114,26 @@ export const extractTopLeftContent = (blocks: PurpleBlock[]): string => {
 };
 
 export const extractTextFromBlocks = (blocks: PurpleBlock[]): string[] => {
+	//   '{"type":"rich_text","block_id":"FUh5J","elements":[{"type":"rich_text_section","elements":[{"type":"user","user_id":"U0927N91N0K"},{"type":"text","text":" test2"}]}]}'
 	return blocks
 		.map((block) => {
-			return block.text?.text;
+			// return block.text?.text;
+			// '{
+			//    "type":"rich_text","block_id":"55A5N",
+			//    "elements":[
+			//      {"type":"rich_text_section","elements":[
+			//        {"type":"user","user_id":"U0927N91N0K"},{"type":"text","text":" test4"}
+			//      ]}
+			//   ]}'
+			const elements = block.elements;
+			const internalElements = elements?.flatMap((el) => el.elements)
+			if (!internalElements) return ""
+			return internalElements.map((ie) => {
+				if (ie?.elements === undefined) {return "";}
+				return ie?.elements?.map((textEl) => textEl.text).join("");
+			}).join("");
 		})
-		.filter((text): text is string => text !== undefined);
+		// .filter((text): text is string => text !== undefined);
 };
 
 export const createSlackMessageBlocks = (props: {
@@ -127,6 +147,7 @@ export const createSlackMessageBlocks = (props: {
 	};
 	bottomContent: string;
 	users: User[];
+	completedUserIds: string[];
 }) => {
 	const validateMainContent = () => {
 		const regex = /^<@U[A-Z0-9]+>$/;
@@ -159,6 +180,24 @@ export const createSlackMessageBlocks = (props: {
 				},
 			],
 		},
+		{// ⬜✅
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "You can toggle your progress display"
+			},
+			"accessory": {
+				"type": "button",
+				"text": {
+					"type": "plain_text",
+					"text": "Finished/Not Yet",
+					"emoji": true
+				},
+				"value": "click_me_123",
+				"action_id": "toggle_1on1_progress",
+				"style": "primary"
+			}
+		}
 	];
 	const onlineSectionHeader =
 		props.mainContent.online.length > 0
@@ -181,11 +220,12 @@ export const createSlackMessageBlocks = (props: {
 		const userId = userMention.replace("<@", "").replace(">", "");
 		const user = props.users.find((u) => u.userId === userId);
 		const huddleUrl = user?.huddleUrl;
+		const isCompleted = props.completedUserIds.includes(userId);
 		prev.push({
 			type: "section",
 			text: {
 				type: "mrkdwn",
-				text: userMention,
+				text: `${isCompleted ? "✅ " : "⬜ "}${userMention}`,
 			},
 			accessory: {
 				type: "button",

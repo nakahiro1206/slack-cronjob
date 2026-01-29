@@ -3,7 +3,7 @@ import {
 	QuestionMarkCircleIcon,
 	UserCircleIcon,
 } from "@heroicons/react/24/outline";
-import React, { useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { getJapanTimeAsJSDate, getJapanTimeAsObject } from "@/lib/date";
@@ -62,7 +62,7 @@ export const UpcomingCard = ({
 		isPending: loadingDeleteUpcomingSlotMutation,
 	} = trpc.upcoming.delete.useMutation();
 
-	const startHandlingRemoveUsers = (channelId: string) => {
+	const startHandlingRemoveUsers = (_channelId: string) => {
 		setIsHandlingRemoveUsers(true);
 		setSelectedRemoveUserIds([]);
 	};
