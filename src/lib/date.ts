@@ -119,4 +119,4 @@ export const isFutureDateJapanTime = (targetISOString: string): boolean => {
 	const targetJapanTime = getJapanTime(targetISOString);
 	const nowJapanTime = getJapanTime();
 	return targetJapanTime.startOf("day") > nowJapanTime.startOf("day");
-}
+};

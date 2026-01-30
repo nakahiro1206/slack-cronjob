@@ -1,9 +1,4 @@
-import {
-	ZodAny,
-	ZodInvalidReturnTypeIssue,
-	type ZodTypeAny,
-	type z,
-} from "zod";
+import type { ZodTypeAny, z } from "zod";
 
 export class Result<T, E extends Error> {
 	private data:

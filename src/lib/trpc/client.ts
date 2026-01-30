@@ -9,7 +9,7 @@ const isDev = process.env.NODE_ENV === "development";
 export const trpcReact = createTRPCReact<AppRouter>();
 
 export const trpc = createTRPCNext<AppRouter>({
-	config(opts) {
+	config(_opts) {
 		return {
 			links: [
 				httpBatchLink({

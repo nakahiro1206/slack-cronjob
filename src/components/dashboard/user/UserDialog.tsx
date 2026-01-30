@@ -24,7 +24,6 @@ const useUserDialog = (refetchUsers: () => void, onClose: () => void) => {
 		trpc.user.add.useMutation();
 
 	const handleCreateUser = async () => {
-
 		addUserMutation(
 			{
 				id: newUserId,

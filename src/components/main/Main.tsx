@@ -54,53 +54,49 @@ const MainInternal = () => {
 				/>
 			</TabsContent>
 			<TabsContent value="channels">
-				<>
-					<ChannelCardList
-						refetchChannels={refetchChannels}
-						channels={channels}
-						users={users.map((user) => ({
+				<ChannelCardList
+					refetchChannels={refetchChannels}
+					channels={channels}
+					users={users.map((user) => ({
+						userId: user.id,
+						userName: user.name,
+						huddleUrl: user.huddleUrl,
+					}))}
+					openChannelDialog={openChannelDialog}
+				/>
+				{/* Channel Dialog */}
+				<ChannelDialog
+					isOpen={isChannelDialogOpen}
+					users={
+						users.map((user) => ({
 							userId: user.id,
 							userName: user.name,
 							huddleUrl: user.huddleUrl,
-						}))}
-						openChannelDialog={openChannelDialog}
-					/>
-					{/* Channel Dialog */}
-					<ChannelDialog
-						isOpen={isChannelDialogOpen}
-						users={
-							users.map((user) => ({
-								userId: user.id,
-								userName: user.name,
-								huddleUrl: user.huddleUrl,
-							})) || []
-						}
-						onClose={closeChannelDialog}
-						refetchChannels={refetchChannels}
-					/>
-				</>
+						})) || []
+					}
+					onClose={closeChannelDialog}
+					refetchChannels={refetchChannels}
+				/>
 			</TabsContent>
 
 			<TabsContent value="users">
-				<>
-					<UserCard
-						users={
-							users.map((user) => ({
-								userId: user.id,
-								userName: user.name,
-								huddleUrl: user.huddleUrl,
-							})) || []
-						}
-						openUserDialog={openUserDialog}
-						refetchUsers={refetchUsers}
-					/>
-					{/* User Dialog */}
-					<UserDialog
-						isOpen={isUserDialogOpen}
-						onClose={closeUserDialog}
-						refetchUsers={refetchUsers}
-					/>
-				</>
+				<UserCard
+					users={
+						users.map((user) => ({
+							userId: user.id,
+							userName: user.name,
+							huddleUrl: user.huddleUrl,
+						})) || []
+					}
+					openUserDialog={openUserDialog}
+					refetchUsers={refetchUsers}
+				/>
+				{/* User Dialog */}
+				<UserDialog
+					isOpen={isUserDialogOpen}
+					onClose={closeUserDialog}
+					refetchUsers={refetchUsers}
+				/>
 			</TabsContent>
 			<TabsContent value="test">
 				<Test refetchUpcomingSlots={refetchUpcomingSlots} />

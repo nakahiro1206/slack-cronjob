@@ -30,7 +30,7 @@ export const Login = ({ children }: { children: React.ReactNode }) => {
 		login(
 			{ email: val },
 			{
-				onSuccess(data, variables, context) {
+				onSuccess(data, _variables, _context) {
 					if (data.success) {
 						setUser(val);
 						toast.success("Login successful");
@@ -38,7 +38,7 @@ export const Login = ({ children }: { children: React.ReactNode }) => {
 						toast.error(data.message);
 					}
 				},
-				onError(error, variables, context) {
+				onError(error, _variables, _context) {
 					toast.error(error.message);
 				},
 			},
