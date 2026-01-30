@@ -5,6 +5,14 @@ import { notificationService } from "@/server/application/container";
 
 const register = (app: App) => {
 	app.event("app_mention", async ({ event, client, logger }) => {
+		const _res = await client.conversations.replies({
+			channel: event.channel,
+			ts: event.ts,
+			limit: 1,
+		});
+		// res.messages?.map((message) => {
+		// 	logger.info(`App mention message: ${message.blocks?.map((b) => b.elements?.map((e) => e.elements)).join(", ") ).join(", ")}`);
+		// });
 		const botIdResult = await slackAuthMiddleWare.getBotId();
 		if (botIdResult.isErr()) {
 			logger.error("Failed to get bot user ID:", botIdResult.error);
@@ -32,14 +40,23 @@ const register = (app: App) => {
 
 		const { thread_ts, channel } = event;
 		console.log("Handling app mention in thread:");
-		waitUntil(
-			notificationService.updateRootMessageOfThread(
+		const updateFn = async () => {
+			const result = await notificationService.updateRootMessageOfThread(
 				channel,
 				thread_ts,
 				event.text,
 				botUserId,
-			),
-		);
+			);
+			result.match(
+				(_ok) => {
+					logger.info("Successfully updated root message of thread");
+				},
+				(err) => {
+					logger.error("Failed to update root message of thread:", err);
+				},
+			);
+		};
+		waitUntil(updateFn());
 		logger.info("Handled app mention in thread");
 	});
 

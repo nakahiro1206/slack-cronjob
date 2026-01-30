@@ -13,7 +13,7 @@ import type {
 	UpcomingSlotDatabaseRepositoryInterface,
 	UserDatabaseRepositoryInterface,
 } from "./interfaces";
-import { Err } from "@/lib/result";
+import { Err, Ok, type Result } from "@/lib/result";
 
 export class NotificationService {
 	constructor(
@@ -302,7 +302,7 @@ export class NotificationService {
 		threadTs: string,
 		text: string,
 		botUserId: string,
-	) {
+	): Promise<Result<void, Error>> {
 		const { hour, minute, date, day, month, year } = getJapanTimeAsObject();
 		const title = `*📣 1on1 order* \n This order is for the meeting on ${day}, ${month} ${date}, ${year}.`;
 		const description = `*⏰ Updated at(UTC+9):*\n ${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} ${day}, ${month} ${date}, ${year}`;
@@ -360,8 +360,8 @@ export class NotificationService {
 			},
 		);
 
-		const slot = upcomingSlots.find((slot) =>
-			slot.channelId === channelId // need to compare by timestamp
+		const slot = upcomingSlots.find(
+			(slot) => slot.channelId === channelId, // need to compare by timestamp
 		);
 		if (!slot) {
 			return Err(new Error("No matching upcoming slot found"));
@@ -404,5 +404,6 @@ export class NotificationService {
 				return Err(error);
 			},
 		);
+		return Ok(undefined);
 	}
 }

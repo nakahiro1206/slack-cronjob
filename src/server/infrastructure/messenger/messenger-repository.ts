@@ -3,12 +3,6 @@ import { Err, Ok, type Result } from "@/lib/result";
 import type { User } from "@/models/user";
 import type { MessengerRepositoryInterface } from "@/server/application/interfaces";
 import type { UserTagsAssignment } from "@/server/domain/entities";
-import {
-	createSlackMessageBlocks,
-	extractMainContent,
-	extractTextFromBlocks,
-	extractTopLeftContent,
-} from "@/server/infrastructure/messenger/schema";
 import { formatUserAssignment } from "../utils";
 
 export const NewMessengerRepository = (): MessengerRepositoryInterface => {
@@ -51,40 +45,55 @@ class MessengerRepository implements MessengerRepositoryInterface {
 			ts: threadTs,
 			limit: 50,
 		});
+		// console.log("Fetched messages in thread:", JSON.stringify(messages, null, 2));
+		// throw new Error("Debugging - remove this line");
 
-		// Ensure we have messages
+		if (!messages || messages.length < 2)
+			return Err(new Error("Insufficient messages in thread"));
 
-		if (!messages) return Err(new Error("No messages found in thread"));
+		const rootMessage = messages[0];
+		const rootMessageTs = rootMessage.ts;
+		const rootMessageBlocks = rootMessage.blocks || [];
+		const lastMessage = messages[messages.length - 1];
 
-		const rootMessageTs = messages[0]?.ts;
-
-		const messageBlocksSequence = messages
-			.map((message) => {
-				const _ts = message.ts; // can update the 1st message with this!
-				const isBot = !!message.bot_id;
-				if (!message.text) return null;
-
-				// For app mentions, remove the mention prefix
-				// For IM messages, keep the full text
-				let content = message.text;
-				if (!isBot && content.includes(`<@${botUserId}>`)) {
-					content = content.replace(`<@${botUserId}> `, "");
+		let title: string | undefined;
+		let mode: "online" | "offline" | undefined;
+		const userTagAssignments: UserTagsAssignment = { offline: [], online: [] };
+		rootMessageBlocks.forEach((block) => {
+			// section with fields
+			if (block.type === "section" && block.fields) {
+				const firstField = block.fields[0];
+				title = firstField.text;
+			} else if (
+				// @ts-expect-error blocks type issue
+				block.type === "header" &&
+				block.text?.text
+			) {
+				const headerText = block.text.text.toLowerCase();
+				if (headerText.includes("offline")) {
+					mode = "offline";
+				} else if (headerText.includes("online")) {
+					mode = "online";
 				}
+			} else if (block.type === "section" && block.text?.text) {
+				const regex = /<@U[A-Z0-9]+>/; // include this patter anywhere in the text
+				const match = block.text.text.match(regex);
+				if (match && mode) {
+					const userMention = match[0];
+					userTagAssignments[mode].push(userMention);
+				}
+			}
+		});
 
-				return message.blocks;
-			})
-			.filter((blocks) => blocks !== null);
+		// user's message is a plain text message. But need to trim bot id
+		const userQuery = lastMessage.text?.replace(`<@${botUserId}>`, "").trim();
 
-		const rootMessageBlocks = messageBlocksSequence[0] || [];
-		const lastMessageBlocks =
-			messageBlocksSequence[messageBlocksSequence.length - 1] || [];
-			console.log("Last message blocks:", lastMessageBlocks.map((i) => JSON.stringify(i)));
-		const title = extractTopLeftContent(rootMessageBlocks);
-		const userTagAssignments = extractMainContent(rootMessageBlocks);
-		const userQuery = extractTextFromBlocks(lastMessageBlocks).join("\n");
+		if (userQuery === undefined || userQuery.trim() === "") {
+			return Err(new Error("User query is empty"));
+		}
 
 		return Ok({
-			title,
+			title: title || "No Title",
 			userTagAssignments,
 			rootMessageTs,
 			userQuery,
@@ -94,31 +103,61 @@ class MessengerRepository implements MessengerRepositoryInterface {
 	async extractInfoFromMessage(
 		channelId: string,
 		timestamp: string,
-	): Promise<Result<{
-			title: string;
-			userTagAssignments: UserTagsAssignment;
-		},
-		Error
-	>>  {
-		const message = await this.client.conversations.history({
+	): Promise<
+		Result<
+			{
+				title: string;
+				userTagAssignments: UserTagsAssignment;
+			},
+			Error
+		>
+	> {
+		const { messages } = await this.client.conversations.history({
 			channel: channelId,
 			latest: timestamp,
 			limit: 1,
 			inclusive: true,
 		});
+		// console.log("Fetched conversation history:", JSON.stringify(messages, null, 2));
 
-		if (!message.messages || message.messages.length === 0) {
+		if (!messages || messages.length === 0) {
 			return Err(new Error("Message not found"));
 		}
 
-		const msg = message.messages[0];
-		const blocks = msg.blocks || [];
+		const rootMessage = messages[0];
+		const rootMessageBlocks = rootMessage.blocks || [];
 
-		const title = extractTopLeftContent(blocks);
-		const userTagAssignments = extractMainContent(blocks);
-		
+		let title: string | undefined;
+		let mode: "online" | "offline" | undefined;
+		const userTagAssignments: UserTagsAssignment = { offline: [], online: [] };
+		rootMessageBlocks.forEach((block) => {
+			// section with fields
+			if (block.type === "section" && block.fields) {
+				const firstField = block.fields[0];
+				title = firstField.text;
+			} else if (
+				// @ts-expect-error blocks type issue
+				block.type === "header" &&
+				block.text?.text
+			) {
+				const headerText = block.text.text.toLowerCase();
+				if (headerText.includes("offline")) {
+					mode = "offline";
+				} else if (headerText.includes("online")) {
+					mode = "online";
+				}
+			} else if (block.type === "section" && block.text?.text) {
+				const regex = /<@U[A-Z0-9]+>/; // include this pattern anywhere in the text
+				const match = block.text.text.match(regex);
+				if (match && mode) {
+					const userMention = match[0];
+					userTagAssignments[mode].push(userMention);
+				}
+			}
+		});
+
 		return Ok({
-			title,
+			title: title || "No Title",
 			userTagAssignments,
 		});
 	}
@@ -135,17 +174,131 @@ class MessengerRepository implements MessengerRepositoryInterface {
 			channel: channelId,
 			// if you ommit thread_ts, the message will be posted in the channel
 			text: "message in channel",
-			blocks: createSlackMessageBlocks({
-				top: {
-					left: title,
-					right: description,
+			blocks: [
+				// Top header
+				{
+					type: "section",
+					fields: [
+						{
+							type: "mrkdwn",
+							text: title,
+						},
+						{
+							type: "mrkdwn",
+							text: description,
+						},
+					],
 				},
-				mainContent: formattedUserAssignments,
-				bottomContent:
-					"Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
-				users: users,
-				completedUserIds: [],
-			}),
+				{
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						text: "You can toggle your progress display",
+					},
+					accessory: {
+						type: "button",
+						text: {
+							type: "plain_text",
+							text: "Finished/Not Yet",
+							emoji: true,
+						},
+						value: "click_me_123",
+						action_id: "toggle_1on1_progress",
+						style: "primary",
+					},
+				},
+				...(formattedUserAssignments.online.length > 0
+					? [
+							{
+								type: "header",
+								text: {
+									type: "plain_text",
+									text: "🌐Online Orders",
+									emoji: true,
+								},
+							},
+						]
+					: [null]
+				).filter((block) => block !== null),
+				...formattedUserAssignments.online.flatMap((userMention) => {
+					const userId = userMention.replace("<@", "").replace(">", "");
+					const user = users.find((u) => u.userId === userId);
+					const huddleUrl = user?.huddleUrl;
+
+					return [
+						{
+							type: "section",
+							text: {
+								type: "mrkdwn",
+								text: `⬜ ${userMention}`,
+							},
+							accessory: {
+								type: "button",
+								text: {
+									type: "plain_text",
+									text: huddleUrl ? "Join Huddle" : "Not Registered",
+									emoji: true,
+								},
+								value: "click_me_123",
+								url: huddleUrl || "https://www.google.com/",
+								action_id: "button-action",
+							},
+						},
+						{
+							type: "divider",
+						},
+					];
+				}),
+				...(formattedUserAssignments.offline.length > 0
+					? [
+							{
+								type: "header",
+								text: {
+									type: "plain_text",
+									text: "🪑Offline Orders",
+									emoji: true,
+								},
+							},
+						]
+					: []),
+				...formattedUserAssignments.offline.flatMap((userMention) => {
+					const userId = userMention.replace("<@", "").replace(">", "");
+					const user = users.find((u) => u.userId === userId);
+					const huddleUrl = user?.huddleUrl;
+
+					return [
+						{
+							type: "section",
+							text: {
+								type: "mrkdwn",
+								text: `⬜ ${userMention}`,
+							},
+							accessory: {
+								type: "button",
+								text: {
+									type: "plain_text",
+									text: huddleUrl ? "Join Huddle" : "Not Registered",
+									emoji: true,
+								},
+								value: "click_me_123",
+								url: huddleUrl || "https://www.google.com/",
+								action_id: "button-action",
+							},
+						},
+						{
+							type: "divider",
+						},
+					];
+				}),
+				// Bottom content
+				{
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						text: "Want to edit the upcoming slot? \n Visit <https://slack-cronjob.vercel.app/>",
+					},
+				},
+			],
 		});
 
 		if (!initialMessage || !initialMessage.ts)
@@ -170,17 +323,133 @@ class MessengerRepository implements MessengerRepositoryInterface {
 			channel: channelId,
 			ts: timestamp,
 			text: "updated by the bot",
-			blocks: createSlackMessageBlocks({
-				top: {
-					left: title,
-					right: description,
+			blocks: [
+				// Top header
+				{
+					type: "section",
+					fields: [
+						{
+							type: "mrkdwn",
+							text: title,
+						},
+						{
+							type: "mrkdwn",
+							text: description,
+						},
+					],
 				},
-				mainContent: formattedUserAssignments,
-				bottomContent:
-					"Want to edit the upcoming slot? \n Visit https://slack-cronjob.vercel.app/",
-				users: users,
-				completedUserIds: completedUserIds,
-			}),
+				{
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						text: "You can toggle your progress display",
+					},
+					accessory: {
+						type: "button",
+						text: {
+							type: "plain_text",
+							text: "Finished/Not Yet",
+							emoji: true,
+						},
+						value: "click_me_123",
+						action_id: "toggle_1on1_progress",
+						style: "primary",
+					},
+				},
+				...(formattedUserAssignments.online.length > 0
+					? [
+							{
+								type: "header",
+								text: {
+									type: "plain_text",
+									text: "🌐Online Orders",
+									emoji: true,
+								},
+							},
+						]
+					: [null]
+				).filter((block) => block !== null),
+				...formattedUserAssignments.online.flatMap((userMention) => {
+					const userId = userMention.replace("<@", "").replace(">", "");
+					const user = users.find((u) => u.userId === userId);
+					const huddleUrl = user?.huddleUrl;
+					const isCompleted = completedUserIds.includes(userId);
+
+					return [
+						{
+							type: "section",
+							text: {
+								type: "mrkdwn",
+								text: `${isCompleted ? "✅ " : "⬜ "}${userMention}`,
+							},
+							accessory: {
+								type: "button",
+								text: {
+									type: "plain_text",
+									text: huddleUrl ? "Join Huddle" : "Not Registered",
+									emoji: true,
+								},
+								value: "click_me_123",
+								url: huddleUrl || "https://www.google.com/",
+								action_id: "button-action",
+							},
+						},
+						{
+							type: "divider",
+						},
+					];
+				}),
+				...(formattedUserAssignments.offline.length > 0
+					? [
+							{
+								type: "header",
+								text: {
+									type: "plain_text",
+									text: "🪑Offline Orders",
+									emoji: true,
+								},
+							},
+						]
+					: []),
+				...formattedUserAssignments.offline.flatMap((userMention) => {
+					const userId = userMention.replace("<@", "").replace(">", "");
+					const user = users.find((u) => u.userId === userId);
+					const huddleUrl = user?.huddleUrl;
+					const isCompleted = completedUserIds.includes(userId);
+
+					return [
+						{
+							type: "section",
+							text: {
+								type: "mrkdwn",
+								text: `${isCompleted ? "✅ " : "⬜ "}${userMention}`,
+							},
+							accessory: {
+								type: "button",
+								text: {
+									type: "plain_text",
+									text: huddleUrl ? "Join Huddle" : "Not Registered",
+									emoji: true,
+								},
+								value: "click_me_123",
+								url: huddleUrl || "https://www.google.com/",
+								action_id: "button-action",
+							},
+						},
+						{
+							type: "divider",
+						},
+					];
+				}),
+				// Bottom content
+				{
+					type: "section",
+					text: {
+						type: "mrkdwn",
+						text: "Want to edit the upcoming slot? \n Visit <https://slack-cronjob.vercel.app/>",
+					},
+				},
+			],
 		});
 
 		if (!updatedMessage || !updatedMessage.ts)

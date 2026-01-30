@@ -33,12 +33,15 @@ export interface MessengerRepositoryInterface {
 	extractInfoFromMessage(
 		channelId: string,
 		timestamp: string,
-	): Promise<Result<{
-			title: string;
-			userTagAssignments: UserTagsAssignment;
-		},
-		Error
-	>>  
+	): Promise<
+		Result<
+			{
+				title: string;
+				userTagAssignments: UserTagsAssignment;
+			},
+			Error
+		>
+	>;
 	postMessage(
 		channelId: string,
 		title: string,

@@ -4,7 +4,7 @@ import type {
 	SlackActionMiddlewareArgs,
 } from "@slack/bolt";
 import type { App } from "@slack/bolt";
-import { upcomingSlotService } from "@/server/application/container";
+import { workspaceService } from "@/server/application/container";
 
 export const register = (app: App) => {
 	app.action(
@@ -30,17 +30,16 @@ export const register = (app: App) => {
 				const messageTs = body.message.ts;
 				const _action = body.actions[0];
 
-        // Update the 1on1 progress status in the data store
-        // await upcomingSlotService.
-
-				// Toggle the state and post update
-				const statusText = "toggled 1on1 progress";
-
-				await client.chat.postMessage({
-					channel: channelId,
-					thread_ts: messageTs,
-					text: `<@${userId}> ${statusText}`,
-				});
+				const res = await workspaceService.toggleProgress(
+					userId,
+					channelId,
+					messageTs,
+				);
+				if (res.isErr()) {
+					logger.error("Error toggling 1on1 progress:", res.error);
+					console.error("Error toggling 1on1 progress:", res.error);
+					return;
+				}
 			} catch (error) {
 				logger.error(error);
 			}

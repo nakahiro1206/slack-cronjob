@@ -7,6 +7,7 @@ import { NewUserDatabaseRepository } from "../infrastructure/database/user-datab
 import { NotificationService } from "./notification-service";
 import { UpcomingSlotService } from "./upcoming-slot-service";
 import { UserService } from "./user-service";
+import { WorkspaceService } from "./workspace-service";
 
 const llmRepository = NewLlmRepository();
 const messengerRepository = NewMessengerRepository();
@@ -27,4 +28,9 @@ export const channelService = new ChannelService(channelDatabaseRepository);
 export const upcomingSlotService = new UpcomingSlotService(
 	upcomingSlotDatabaseRepository,
 	channelDatabaseRepository,
+);
+export const workspaceService = new WorkspaceService(
+	messengerRepository,
+	upcomingSlotDatabaseRepository,
+	userDatabaseRepository,
 );
