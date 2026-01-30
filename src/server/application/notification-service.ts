@@ -387,6 +387,19 @@ export class NotificationService {
 
 		const obj = objectResult.unwrap();
 
+		// update userIds in upcoming slot database
+		const updatedUserIds = [
+			...obj.online.map((id: string) => id.replace("<@", "").replace(">", "")),
+			...obj.offline.map((id: string) => id.replace("<@", "").replace(">", "")),
+		]
+		const overwriteUsersRes = await this.upcomingSlotDatabaseRepository.overwriteUsers(
+			channelId,
+			updatedUserIds,
+		);
+		if (overwriteUsersRes.isErr()) {
+			return Err(overwriteUsersRes.error);
+		}
+
 		const updateToNewContentRes = await this.messengerRepository.updateMessage(
 			channelId,
 			title,

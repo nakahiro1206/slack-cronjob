@@ -82,6 +82,7 @@ export interface UpcomingSlotDatabaseRepositoryInterface {
 		channelId: string,
 		userIds: string[],
 	): Promise<Result<void, Error>>;
+	overwriteUsers(channelId: string, userIds: string[]): Promise<Result<void, Error>>;
 	changeDate(
 		channelId: string,
 		isoString: string,

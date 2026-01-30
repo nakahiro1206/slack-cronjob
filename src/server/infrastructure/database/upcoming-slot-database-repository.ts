@@ -160,6 +160,28 @@ class UpcomingSlotDatabaseRepository
 			return Err<void, Error>(error as Error);
 		}
 	}
+	async overwriteUsers(channelId: string, userIds: string[]) {
+		try {
+			const upcomingSlotRef = collection(this.db, "upcoming");
+			const docRef = doc(upcomingSlotRef, channelId);
+			const docSnap = await getDoc(docRef);
+			if (!docSnap.exists()) {
+				return Err<void, Error>(new Error("Upcoming slot not found"));
+			}
+			const parsed = upcomingSlotSchema.safeParse(docSnap.data());
+			if (!parsed.success) {
+				return Err<void, Error>(new Error("Invalid upcoming slot data"));
+			}
+			const updatedSlot: UpcomingSlot = {
+				...parsed.data,
+				userIds: userIds,
+			};
+			await setDoc(docRef, updatedSlot);
+			return Ok(undefined);
+		} catch (error) {
+			return Err<void, Error>(error as Error);
+		}
+	}
 	async addCompletedUser(
 		channelId: string,
 		userId: string,
